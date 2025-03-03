@@ -11,8 +11,7 @@ class ProductRepository(ProductRepositoryInterface):
       return None
 
   def all(self) -> List[Product]:
-    return Product.objects.all()
-
+     return Product.objects.select_related('supplier').all() 
   def add(self, product: Product) -> Product:
     if product.pk is None:
       product.save()
@@ -28,7 +27,7 @@ class ProductRepository(ProductRepositoryInterface):
       raise ValueError("Product does not exist. Use add product to add a new product.")
 
   def delete(self, product: Product) -> bool:
-    if product:
+    if product and product.pk is not None:
       product.delete()
       return True
     return False

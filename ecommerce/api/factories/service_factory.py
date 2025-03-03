@@ -3,20 +3,25 @@ from api.services.implement.marketService import MarketService
 from api.services.implement.productService import ProductService
 from api.services.interface.userServiceInterface import UserServiceInterface
 from api.services.interface.marketServiceInterface import MarketServiceInterface
-from api.services.interface.productServiceInterface import ProductServiceInterface
-from api.repositories.interface.productRepositoryInterface import (
-    ProductRepositoryInterface,
-)
+
 from api.services.interface.SupplierServiceInterface import SupplierServiceInterface
 from api.services.implement.SupplierService import SupplierService
 from api.services.interface.customerServiceInterface import CustomerServiceInterface
 from api.services.implement.CustomerService import CustomerService
+
+from api.services.interface.productServiceInterface import ProductServiceInterface
+from api.services.implement.productService import ProductService
+
+from api.services.interface.orderServiceInterface import OrderServiceInterface
+from api.services.implement.orderService import OrdersService
 
 from api.factories.repository_factory import create_market_repository
 from api.factories.repository_factory import create_product_repository
 from api.factories.repository_factory import create_supplier_repository
 from api.factories.repository_factory import create_User_repository
 from api.factories.repository_factory import create_customer_repository
+from api.factories.repository_factory import create_product_repository
+from api.factories.repository_factory import create_order_repository
 
 
 ###################################################################
@@ -47,11 +52,6 @@ def create_market_service(singleton: bool = False) -> MarketServiceInterface:
 
 ###################################################################################################
 
-
-#####################################################################################
-def create_product_service() -> ProductServiceInterface:
-    product_repository: ProductRepositoryInterface = create_product_repository()
-    return ProductService(product_repository)
 
 
 #####################################################################################
@@ -133,3 +133,48 @@ def create_customer_service(singleton: bool = False) -> CustomerServiceInterface
             user_repository
         )
 ##################################################################################
+product_service_instance = None
+
+def create_product_service(singleton: bool = False) -> ProductServiceInterface:
+
+    global product_service_instance
+
+    if singleton:
+        if product_service_instance is None:
+            product_repository = create_product_repository(
+                singleton=True
+            )  # Get the singleton repository instance
+            product_service_instance = ProductService(
+                product_repository
+            )  # Create singleton service
+        return product_service_instance
+    else:
+        product_repository = create_product_repository(
+            singleton=False
+        )  # Get a new repository instance
+        return ProductService(
+            product_repository
+        )  # Return a new service instance with the injected repository
+##################################################################################
+order_service_instance = None
+
+def create_order_service(singleton: bool = False) -> OrderServiceInterface:
+
+    global order_service_instance
+
+    if singleton:
+        if order_service_instance is None:
+            product_repository = create_order_repository(
+                singleton=True
+            )  # Get the singleton repository instance
+            order_service_instance = OrdersService(
+                product_repository
+            )  # Create singleton service
+        return order_service_instance
+    else:
+        product_repository = create_order_repository(
+            singleton=False
+        )  # Get a new repository instance
+        return OrdersService(
+            product_repository
+        )  # Return a new service instance with the injected repository

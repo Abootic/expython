@@ -27,6 +27,18 @@ class Order(models.Model):
     verbose_name="Total Price",
     help_text="The total price of the order."
   )
+  price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        default=0.00,  # Provide default value for existing rows
+        verbose_name="Price",
+        help_text="The price of the order."
+    )
+  create_at = models.DateField(
+      auto_now=True,
+        verbose_name="Creation Date",
+        help_text="The date the order was created."
+    )
   quantity = models.PositiveIntegerField(
     default=0,
     verbose_name="Quantity",

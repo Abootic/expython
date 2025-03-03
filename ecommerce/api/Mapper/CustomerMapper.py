@@ -1,29 +1,26 @@
-from api.models.customer import Customer
-from api.dto.user_dto import UserDTO
 from api.dto.customer_dto import CustomerDTO
+from api.models.customer import Customer
+
 
 class CustomerMapper:
-
     @staticmethod
-    def to_model(customer_dto: CustomerDTO) -> Customer:
-        """Convert CustomerDTO to Customer model."""
-        return Customer(
-            code=customer_dto.code,
-            phone_number=customer_dto.phone_number,
-            user_id=customer_dto.user_id
-        )
-
-    @staticmethod
-    def to_dto(customer: Customer) -> CustomerDTO:
-        """Convert Customer model to CustomerDTO."""
+    def to_dto(customer, user_dto=None):
+        # Ensure that user_dto is included if available
         return CustomerDTO(
             id=customer.id,
-            user_id=customer.user.id if customer.user else None,
-            phone_number=customer.phone_number,
-            code=customer.code
+            code=customer.code,
+            user_dto=user_dto  # Adding user DTO to the customer DTO
         )
 
+    # If you need to handle a list of customers
     @staticmethod
-    def to_dto_list(customers: list) -> list:
-        """Convert a list of Customer models to a list of CustomerDTOs."""
+    def to_dto_list(customers):
         return [CustomerMapper.to_dto(customer) for customer in customers]
+    @staticmethod
+    def to_model(customer_dto: CustomerDTO):
+        # Convert CustomerDTO back to Customer model for database operations
+        return Customer(
+            id=customer_dto.id,
+            code=customer_dto.code,
+            user_id=customer_dto.user_dto.id if customer_dto.user_dto else None  # Assuming user_id is linked in the DTO
+        )

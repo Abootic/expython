@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from api.dto.Supplier_dto import SupplierDTO
 from rest_framework.permissions import IsAuthenticated
 
+from api.dto.user_dto import UserDTO
 from api.factories.service_factory import create_supplier_service  # Assuming service factory is used
 from api.permissions.permissions import RoleRequiredPermission
 
@@ -58,12 +59,39 @@ class SupplierViewSet(viewsets.ViewSet):
             return Response({"error": str(e)}, status=500)
 
     def update(self, request, pk=None):
-        # Update an existing supplier
-        obj = SupplierDTO(id=pk, code=request.data.get('code'))
-        res = self._service.update(obj)
-        if res.status.succeeded:
-            return Response(res.data.to_dict(), status=res.status.code)
-        return Response({"error": res.status.message}, status=res.status.code)
+        try:
+            # Extract the customer data from the request body
+            data = request.data
+            user_dto_data = data.get('user_dto')
+
+            # Ensure the user_dto is present and map it
+            if user_dto_data:
+                user_dto = UserDTO(**user_dto_data)  # Map user_dto data to UserDTO
+            else:
+                return Response({"error": "User data is required"}, status=400)
+
+            # Create CustomerDTO
+            print("22222222222222222222222222222222222222222222222222222222222")
+
+            print(data.get('code'))
+            customer_dto = SupplierDTO(
+                id=data.get('id', pk),  # Use ID from request or from URL
+                code=data.get('code'),
+                user_id=data.get('user_id'),
+                user_dto=user_dto  # Attach the UserDTO to the CustomerDTO
+            )
+
+            # Call the service to update the customer
+            result = self._service.update(customer_dto)
+
+            if result.status.succeeded:
+                return Response(result.data.to_dict(), status=result.status.code)
+
+            return Response({"error": result.status.message}, status=result.status.code)
+
+        except Exception as e:
+            return Response({"error": f"Error updating customer: {str(e)}"}, status=500)
+
 
     def destroy(self, request, pk=None):
         # Delete an existing supplier

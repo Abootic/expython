@@ -1,3 +1,4 @@
+from api.Mapper.user_mapper import UserMapper
 from api.dto.user_dto import UserDTO
 from api.models.user import User
 from api.repositories.interface.customerRepositoryInterface import CustomerRepositoryInterface
@@ -10,6 +11,8 @@ from api.Mapper.CustomerMapper import CustomerMapper
 from api.wrpper.Result import ConcreteResultT, ResultT
 import random
 import string
+import json
+
 
 class CustomerService(CustomerServiceInterface):
     def __init__(self, customer_repository, user_repository):  # Ensure the parameter name is userrepoaitory
@@ -27,70 +30,119 @@ class CustomerService(CustomerServiceInterface):
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving Customer: {str(e)}", 500)
 
+    # def all(self) -> ResultT:
+    #     try:
+    #         Customers = self.customer_repository.all()
+    #         if Customers:
+    #             Customer_dtos = CustomerMapper.to_dto_list(Customers)
+    #             user=self.user_repository.all()
+    #             print("=======================================================================")
+    #             print(json.dumps([dto.to_dict() for dto in Customer_dtos], indent=4))
+
+    #             return ConcreteResultT.success(Customer_dtos)
+    #         else:
+    #             return ConcreteResultT.fail("No Customers found", 404)
+    #     except Exception as e:
+    #         return ConcreteResultT.fail(f"Error retrieving Customers: {str(e)}", 500)
+
     def all(self) -> ResultT:
         try:
-            Customers = self.customer_repository.all()
-            if Customers:
-                Customer_dtos = CustomerMapper.to_dto_list(Customers)
-                return ConcreteResultT.success(Customer_dtos)
-            else:
-                return ConcreteResultT.fail("No Customers found", 404)
+            customers = self.customer_repository.all()  # Get all customers
+            users = self.user_repository.all()  # Get all users
+
+            if not customers:
+                return ConcreteResultT.fail("No customers found", 404)
+
+            # Convert each customer to a DTO, including user details
+            customer_dtos = []
+            for customer in customers:
+                user = next((u for u in users if u.id == customer.user_id), None)  # Find related user
+                user_dto = UserMapper.to_dto(user) if user else None  # Convert user to DTO
+                customer_dto = CustomerMapper.to_dto(customer, user_dto)  # Convert customer to DTO
+                customer_dtos.append(customer_dto)
+
+            # Convert customer DTOs to dictionaries before serializing them
+            customer_dtos_dict = [dto.to_dict() for dto in customer_dtos]
+
+            # Debugging: Print JSON formatted output
+            print("=" * 75)
+            print(json.dumps(customer_dtos_dict, indent=4))
+
+            return ConcreteResultT.success(customer_dtos)
+
         except Exception as e:
-            return ConcreteResultT.fail(f"Error retrieving Customers: {str(e)}", 500)
+            return ConcreteResultT.fail(f"Error retrieving customers: {str(e)}", 500)
 
     def add(self, customer_dto: CustomerDTO) -> ResultT:
+                try:
+                    # Ensure user_dto is converted into UserDTO object if it's not already
+                    user_dto = customer_dto.user_dto
+                    if isinstance(user_dto, dict):
+                        user_dto = UserDTO(**user_dto)  # Convert dict to UserDTO
+
+                    # Generate supplier code
+                    customer_dto.code = _generate_Customer_code()
+
+                    # Check if supplier code already exists
+                    if self.customer_repository.exists_by_code(customer_dto.code):
+                        return ConcreteResultT.fail("Customer code already exists", 400)
+
+                    # Create user model from the validated and mapped DTO
+                    user_model = User(
+                        username=user_dto.username,
+                        user_type=user_dto.user_type,
+                        email=user_dto.email,  # Include the email if needed,
+                    )
+
+                    # Create the user in the database using UserRepository
+                    user = self.user_repository.create(user_model, user_dto.password)  # Make sure `create` exists here
+
+                    # Create customer model (mapping from the DTO)
+                    customer_model = Customer(
+                        user=user,
+                        code=customer_dto.code,
+                    )
+
+                    # Save the customer to the repository
+                    customer = self.customer_repository.add(customer_model)
+
+                    # Return success result with the created customer
+                    return ConcreteResultT.success("Customer added successfully")
+
+                except Exception as e:
+                    return ConcreteResultT.fail(f"Failed to add customer: {str(e)}", 500)
+
+    def update(self, customer_dto: CustomerDTO) -> ResultT:
         try:
-            # Ensure user_dto is converted into UserDTO object if it's not already
-            user_dto = customer_dto.user_dto
-            if isinstance(user_dto, dict):
-                user_dto = UserDTO(**user_dto)  # Convert dict to UserDTO
+            if not customer_dto.code:
+                customer_dto.code = _generate_Customer_code()
 
-            # Generate supplier code
-            customer_dto.code = _generate_Customer_code()
+            # Convert CustomerDTO to Customer model
+            customer_model = CustomerMapper.to_model(customer_dto)
 
-            # Check if supplier code already exists
-            if self.customer_repository.exists_by_code(customer_dto.code):
-                return ConcreteResultT.fail("Customer code already exists", 400)
+            # Check if user_dto is present and update the User
+            if customer_dto.user_dto:
+                user_dto = customer_dto.user_dto
+                user_model = self.user_repository.get_by_id(customer_model.user_id)
 
-            # Create user model from the validated and mapped DTO
-            user_model = User(
-                username=user_dto.username,
-                user_type=user_dto.user_type,
-                email=user_dto.email,  # Include the email if needed,
-            )
+                if user_model:
+                    # Update the User with new values from user_dto (e.g., username)
+                    user_model.username = user_dto.username if user_dto.username else user_model.username
+                    user_model.email = user_dto.email if user_dto.email else user_model.email
+                    user_model.user_type = user_dto.user_type if user_dto.user_type else user_model.user_type
+                    
+                    # Update the User in the repository
+                    self.user_repository.update(user_model)
 
-            # Create the user in the database using UserRepository
-            user = self.user_repository.create(user_model, user_dto.password)  # Make sure `create` exists here
-
-            # Create customer model (mapping from the DTO)
-            customer_model = Customer(
-                user=user,
-                code=customer_dto.code,
-            )
-
-            # Save the customer to the repository
-            customer = self.customer_repository.add(customer_model)
-
-            # Return success result with the created customer
-            return ConcreteResultT.success("Customer added successfully")
-
-        except Exception as e:
-            return ConcreteResultT.fail(f"Failed to add customer: {str(e)}", 500)
-
-    def update(self, Customer_dto: CustomerDTO) -> ResultT:
-        try:
-            if not Customer_dto.code:
-                Customer_dto.code = _generate_Customer_code()
-
-            # Convert DTO to model and update it
-            obj = CustomerMapper.to_model(Customer_dto)
-            updated_Customer = self.customer_repository.update(obj)
+            # Update the Customer with the updated data
+            updated_customer = self.customer_repository.update(customer_model)
 
             # Return success with updated Customer DTO
-            return ConcreteResultT.success(CustomerMapper.to_dto(updated_Customer))
+            return ConcreteResultT.success(CustomerMapper.to_dto(updated_customer))
 
         except Exception as e:
             return ConcreteResultT.fail(f"Failed to update Customer: {str(e)}", 500)
+
 
     def delete(self, entityDto: CustomerDTO) -> ResultT:
         try:

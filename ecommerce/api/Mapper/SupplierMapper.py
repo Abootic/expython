@@ -1,10 +1,9 @@
 from api.dto.Supplier_dto import SupplierDTO
-from api.dto.user_dto import UserDTO
 from api.models.supplier import Supplier
 
 
 class SupplierMapper:
-
+    
     @staticmethod
     def to_model(supplier_dto: SupplierDTO) -> Supplier:
         """Convert SupplierDTO to Supplier model."""
@@ -15,18 +14,13 @@ class SupplierMapper:
         )
 
     @staticmethod
-    def to_dto(supplier: Supplier) -> SupplierDTO:
+    def to_dto(supplier: Supplier, user_dto=None) -> SupplierDTO:
         """Convert Supplier model to SupplierDTO."""
-        user_dto = UserDTO(
-            username=supplier.user.username,
-            user_type=supplier.user.user_type,
-            email=supplier.user.email
-        )
         return SupplierDTO(
             id=supplier.id,
             code=supplier.code,
             market_id=supplier.market_id,
-            user_dto=user_dto.to_dict()  # Convert UserDTO to dict
+            user_dto=user_dto.to_dict() if user_dto else None  # Convert UserDTO to dict
         )
 
     @staticmethod

@@ -1,13 +1,15 @@
 from api.repositories.implement.userRepository import UserRepository
 from api.repositories.implement.marketRepository import MarketRepository
-from api.repositories.implement.productRepository import ProductRepository
 from api.repositories.interface.userRepositoryInterface import UserRepositoryInterface
 from api.repositories.interface.marketRepositoryInterface import MarketRepositoryInterface
-from api.repositories.interface.productRepositoryInterface import ProductRepositoryInterface
 from api.repositories.interface.supplierRepositoryInterface import SupplierRepositoryInterface
 from api.repositories.implement.SupplierRepository import SupplierRepository
 from api.repositories.interface.customerRepositoryInterface import CustomerRepositoryInterface
 from api.repositories.implement.customerRepository import CustomerRepository
+from api.repositories.interface.productRepositoryInterface import ProductRepositoryInterface
+from api.repositories.implement.productRepository import ProductRepository
+from api.repositories.interface.orderRepositoryInterface import OrderRepositoryInterface
+from api.repositories.implement.orderRepository import OrderRepository
 
 
 user_repository_instance = None
@@ -40,19 +42,6 @@ def create_market_repository(singleton: bool = False) -> MarketRepositoryInterfa
 ####################################################################################
 
 
-product_repository_instance = None
-
-def create_product_repository(singleton: bool = False) -> ProductRepositoryInterface:
-   
-    global product_repository_instance
-    
-    
-    if singleton:
-        if product_repository_instance is None:
-            product_repository_instance = ProductRepository()  # Create the singleton instance
-        return product_repository_instance
-    else:
-        return ProductRepository()  # Create a new instance each time
     
 ####################################################################################
 supplier_repository_instance = None
@@ -81,6 +70,34 @@ def create_customer_repository(singleton: bool = False) -> CustomerRepositoryInt
         return customer_repository_instance
     else:
         return CustomerRepository()  # Create a new instance each time
+#####################################################################################################################
+####################################################################################
+product_repository_instance = None
+
+def create_product_repository(singleton: bool = False) -> ProductRepositoryInterface:
+    global product_repository_instance
+    
+    
+    if singleton:
+        if product_repository_instance is None:
+            product_repository_instance = ProductRepository()  # Create the singleton instance
+        return product_repository_instance
+    else:
+        return ProductRepository()  # Create a new instance each time
+#####################################################################################################################
+####################################################################################
+order_repository_instance = None
+
+def create_order_repository(singleton: bool = False) -> OrderRepositoryInterface:
+    global order_repository_instance
+    
+    
+    if singleton:
+        if order_repository_instance is None:
+            order_repository_instance = ProductRepository()  # Create the singleton instance
+        return order_repository_instance
+    else:
+        return OrderRepository()  # Create a new instance each time
 #####################################################################################################################
 
 

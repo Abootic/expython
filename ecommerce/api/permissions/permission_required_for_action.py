@@ -5,10 +5,6 @@ from rest_framework import status
 from api.permissions.permissions import RoleRequiredPermission
 
 def permission_required_for_action(actions_permissions):
-    """
-    Custom decorator to handle permission logic for different actions.
-    `actions_permissions` should be a dictionary with action names as keys and lists of permission classes as values.
-    """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(view, request, *args, **kwargs):

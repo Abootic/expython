@@ -1,3 +1,4 @@
+from api.Mapper.user_mapper import UserMapper
 from api.dto.user_dto import UserDTO
 from api.models.user import User
 from api.repositories.interface.supplierRepositoryInterface import SupplierRepositoryInterface
@@ -27,16 +28,32 @@ class SupplierService(SupplierServiceInterface):
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving supplier: {str(e)}", 500)
 
-    def all(self) -> ResultT:
+   
+
+    def all(self) -> List[SupplierDTO]:
         try:
-            suppliers = self.supplier_repository.all()
-            if suppliers:
-                supplier_dtos = SupplierMapper.to_dto_list(suppliers)
-                return ConcreteResultT.success(supplier_dtos)
-            else:
-                return ConcreteResultT.fail("No suppliers found", 404)
+            suppliers = self.supplier_repository.all()  # Get all suppliers
+            supplier_dtos = []  # Initialize list for DTOs
+
+            for supplier in suppliers:
+                # Ensure the associated user exists for this supplier
+                user = supplier.user  # Assuming you have a related field like 'user' in Supplier
+                if user:
+                    user_dto = UserMapper.to_dto(user)  # Map User to UserDTO
+                else:
+                    user_dto = None  # Or create an empty UserDTO if no user is found
+
+                # Map Supplier to SupplierDTO, including the user_dto
+                supplier_dto = SupplierMapper.to_dto(supplier, user_dto)
+                supplier_dtos.append(supplier_dto)
+
+            return ConcreteResultT.success(supplier_dtos)
+
         except Exception as e:
-            return ConcreteResultT.fail(f"Error retrieving suppliers: {str(e)}", 500)
+            return ConcreteResultT.fail(f"Failed to retrieve suppliers: {str(e)}", 500)
+
+
+
 
     def add(self, supplier_dto: SupplierDTO) -> ResultT:
         try:
@@ -81,17 +98,40 @@ class SupplierService(SupplierServiceInterface):
         except Exception as e:
             return ConcreteResultT.fail(f"Failed to add supplier: {str(e)}", 500)
 
+
     def update(self, supplier_dto: SupplierDTO) -> ResultT:
         try:
-            if not supplier_dto.code:
-                supplier_dto.code = _generate_supplier_code()
+            print("======================================================")
+            print(supplier_dto.code)
+            # Retrieve the existing supplier from the repository
+            supplier = self.supplier_repository.get_by_id(supplier_dto.id)
+            if not supplier:
+                return ConcreteResultT.fail("Supplier not found", 404)
 
-            # Convert DTO to model and update it
-            obj = SupplierMapper.to_model(supplier_dto)
-            updated_supplier = self.supplier_repository.update(obj)
+            # Check if user_dto exists and update the associated user
+            if supplier_dto.user_dto:
+                user_model = self.userrepoaitory.get_by_id(supplier_dto.user_id)
+                if user_model:
+                    # Update user fields from user_dto
+                    user_model.username = supplier_dto.user_dto.username
+                    user_model.email = supplier_dto.user_dto.email
+                    user_model.user_type = supplier_dto.user_dto.user_type
+                    self.userrepoaitory.update(user_model)
+                else:
+                    return ConcreteResultT.fail("User not found", 404)
 
-            # Return success with updated supplier DTO
-            return ConcreteResultT.success(SupplierMapper.to_dto(updated_supplier))
+            # Update supplier fields
+            supplier.code = supplier_dto.code or supplier.code
+            print("suuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+            print(supplier.code)
+            if isinstance(supplier.code , tuple):
+                supplier.code  = supplier.code[0]
+
+            self.supplier_repository.update(supplier)
+
+            # Return the updated supplier DTO
+            updated_supplier_dto = SupplierMapper.to_dto(supplier)
+            return ConcreteResultT.success(updated_supplier_dto)
 
         except Exception as e:
             return ConcreteResultT.fail(f"Failed to update supplier: {str(e)}", 500)
@@ -102,7 +142,8 @@ class SupplierService(SupplierServiceInterface):
             supplier = self.supplier_repository.get_by_id(entityDto.id)
             if supplier:
                 if self.supplier_repository.delete(supplier):
-                    return ConcreteResultT.success("Supplier successfully deleted", 200)
+                    # Pass only the message and return a dictionary with status and data
+                    return ConcreteResultT.success({"message": "Supplier successfully deleted", "status_code": 200})
                 return ConcreteResultT.fail("Failed to delete supplier", 400)
             return ConcreteResultT.fail("Supplier not found", 404)
 
@@ -110,6 +151,7 @@ class SupplierService(SupplierServiceInterface):
             return ConcreteResultT.fail("Supplier not found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error occurred during deletion: {str(e)}", 500)
+
 
 
 def _generate_supplier_code() -> str:

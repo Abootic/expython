@@ -9,26 +9,47 @@ class ProductViewSet(viewsets.ViewSet):
     self.product_service = create_product_service()
 
   def list(self, request):
-    products = self.product_service.all()
-    product_dtos = [ProductDTO.from_model(product) for product in products]
-    return Response([product.to_dict() for product in product_dtos])
+      res = self.product_service.all()
+      if res.status.succeeded:
+            return Response([obj.to_dict() for obj in res.data], status=res.status.code)
+      return Response({"error": res.status.message}, status=res.status.code)
 
   def retrieve(self, request, pk=None):
-    product = self.product_service.get_by_id(pk)
-    if product:
-      product_dto = ProductDTO.from_model(product)
-      return Response(product_dto.to_dict())
-    return Response({"error": "Product not found"}, status=404)
+      res = self.product_service.get_by_id(pk)
+        
+      if res.status.succeeded:
+            return Response(res.data.to_dict(), status=res.status.code)
 
+      return Response({"error": res.status.message}, status=res.status.code)
   def create(self, request):
-    product_dto = ProductDTO(name=request.data.get('name'), price=request.data.get('price'), supplier_id=request.data.get('supplier_id'))
-    added_product = self.product_service.add(product_dto)
-    return Response(added_product.to_dict(), status=201)
+    try:
+        # Creating the ProductDTO from the request data
+        product_dto = ProductDTO(
+            name=request.data.get('name'),
+            price=request.data.get('price'),
+            supplier_id=request.data.get('supplier_id')
+        )
+
+        # Call the add method of the service to add the product
+        res = self.product_service.add(product_dto)
+
+        # Ensure the response is a dictionary, so it's serializable
+        return Response(res.data.to_dict(), status=201)  # Assuming res.data is a ProductDTO
+    except Exception as e:
+        # Handle any exception that occurs during the process
+        return Response({"error": str(e)}, status=500)
+
+
+
 
   def update(self, request, pk=None):
-    product_dto = ProductDTO(id=pk, name=request.data.get('name'), price=request.data.get('price'), supplier_id=request.data.get('supplier_id'))
-    updated_product = self.product_service.update(product_dto)
-    return Response(updated_product.to_dict())
+       pro = ProductDTO(id=pk, name=request.data.get('name'), price=request.data.get('price'), supplier_id=request.data.get('supplier_id'))
+       res=self.product_service.update(pro)
+       if res.status.succeeded:
+           
+
+            return Response(res.data.to_dict(), status=res.status.code)
+       return Response({"error": res.status.message}, status=res.status.code)
 
   def destroy(self, request, pk=None):
     product_dto = ProductDTO(id=pk)
