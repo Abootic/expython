@@ -25,6 +25,8 @@ class CustomerViewSet(viewsets.ViewSet):
         'update': [IsAuthenticated, RoleRequiredPermission],
         'destroy': [IsAuthenticated, RoleRequiredPermission]
      })
+    
+    
     def list(self, request):
         # Retrieve all suppliers using the service
         res = self._service.all()

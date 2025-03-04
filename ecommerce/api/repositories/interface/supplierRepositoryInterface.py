@@ -26,3 +26,6 @@ class SupplierRepositoryInterface(ABC):
 	@abstractmethod
 	def exists_by_code(self, code: str) -> bool:
 		pass
+	@abstractmethod
+	def   count_by_market_id(self, market_id: int) -> int:
+		pass

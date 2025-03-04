@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from api.dto.Supplier_dto import SupplierDTO
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from api.dto.user_dto import UserDTO
 from api.factories.service_factory import create_supplier_service  # Assuming service factory is used
@@ -40,7 +41,8 @@ class SupplierViewSet(viewsets.ViewSet):
             user_dto = request.data.get('user_dto')  # Nested user data in the request
             if not user_dto:
                 return Response({"error": "User data is required"}, status=400)
-
+            print("##############################################################")
+            print(request.data.get('code'))
             # Create SupplierDTO from the request data
             supplier_dto = SupplierDTO(
                 code=request.data.get('code'),
@@ -100,3 +102,17 @@ class SupplierViewSet(viewsets.ViewSet):
         if res.status.succeeded:
             return Response({"message": "Supplier deleted"}, status=res.status.code)
         return Response({"error": res.status.message}, status=res.status.code)
+
+
+
+    
+    @action(detail=False, methods=['get'], url_path='supplierCountInmarket/(?P<marketid>\d+)')
+    def supplierCountInmarket(self, request, marketid):
+        # Call the service method to get the count of suppliers
+        res = self._service.count_by_market_id(marketid)
+        
+        if res.status.succeeded:
+            return Response({"supplier_count": res.data}, status=res.status.code)
+        
+        return Response({"error": res.status.message}, status=res.status.code)
+

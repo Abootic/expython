@@ -23,4 +23,7 @@ class SupplierServiceInterface(ABC):
   @abstractmethod
   def delete(self, supplier_dto: SupplierDTO) -> bool:
     pass
+  @abstractmethod
+  def count_by_market_id(self, market_id: int) -> int:
+    pass
 

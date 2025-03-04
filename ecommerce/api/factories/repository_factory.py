@@ -10,6 +10,9 @@ from api.repositories.interface.productRepositoryInterface import ProductReposit
 from api.repositories.implement.productRepository import ProductRepository
 from api.repositories.interface.orderRepositoryInterface import OrderRepositoryInterface
 from api.repositories.implement.orderRepository import OrderRepository
+from api.repositories.interface.percentageRepositoryInterface import PercentageRepositoryInterface
+from api.repositories.implement.percentageRepository import PercentageRepository
+
 
 
 user_repository_instance = None
@@ -94,10 +97,24 @@ def create_order_repository(singleton: bool = False) -> OrderRepositoryInterface
     
     if singleton:
         if order_repository_instance is None:
-            order_repository_instance = ProductRepository()  # Create the singleton instance
+            order_repository_instance = OrderRepository()  # Create the singleton instance
         return order_repository_instance
     else:
         return OrderRepository()  # Create a new instance each time
+#####################################################################################################################
+
+Percentage_repository_instance = None
+
+def create_Percentage_repository(singleton: bool = False) -> PercentageRepositoryInterface:
+    global Percentage_repository_instance
+    
+    
+    if singleton:
+        if Percentage_repository_instance is None:
+            Percentage_repository_instance = PercentageRepository()  # Create the singleton instance
+        return Percentage_repository_instance
+    else:
+        return PercentageRepository()  # Create a new instance each time
 #####################################################################################################################
 
 

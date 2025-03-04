@@ -6,6 +6,7 @@ from api.services.interface.marketServiceInterface import MarketServiceInterface
 
 from api.services.interface.SupplierServiceInterface import SupplierServiceInterface
 from api.services.implement.SupplierService import SupplierService
+
 from api.services.interface.customerServiceInterface import CustomerServiceInterface
 from api.services.implement.CustomerService import CustomerService
 
@@ -15,6 +16,9 @@ from api.services.implement.productService import ProductService
 from api.services.interface.orderServiceInterface import OrderServiceInterface
 from api.services.implement.orderService import OrdersService
 
+from api.services.interface.PercentageServiceInterface import PercentageServiceInterface
+from api.services.implement.PercentageService import PercentageService
+
 from api.factories.repository_factory import create_market_repository
 from api.factories.repository_factory import create_product_repository
 from api.factories.repository_factory import create_supplier_repository
@@ -22,6 +26,7 @@ from api.factories.repository_factory import create_User_repository
 from api.factories.repository_factory import create_customer_repository
 from api.factories.repository_factory import create_product_repository
 from api.factories.repository_factory import create_order_repository
+from api.factories.repository_factory import create_Percentage_repository
 
 
 ###################################################################
@@ -164,17 +169,31 @@ def create_order_service(singleton: bool = False) -> OrderServiceInterface:
 
     if singleton:
         if order_service_instance is None:
-            product_repository = create_order_repository(
+            order_repository = create_order_repository(
                 singleton=True
             )  # Get the singleton repository instance
             order_service_instance = OrdersService(
-                product_repository
+                order_repository
             )  # Create singleton service
         return order_service_instance
     else:
-        product_repository = create_order_repository(
+        order_repository = create_order_repository(
             singleton=False
         )  # Get a new repository instance
         return OrdersService(
-            product_repository
+            order_repository
         )  # Return a new service instance with the injected repository
+##################################################################################
+Percentage_service_instance = None
+
+def create_Percentage_service(singleton: bool = False) -> PercentageServiceInterface:
+    global Percentage_service_instance
+
+    if singleton:
+        if Percentage_service_instance is None:
+            Percentage_repository = create_Percentage_repository(singleton=True)  # Get the singleton repository instance
+            Percentage_service_instance = PercentageService(Percentage_repository)  # Create singleton service
+        return Percentage_service_instance
+    else:
+        Percentage_repository = create_Percentage_repository(singleton=False)  # Get a new repository instance
+        return PercentageService(Percentage_repository)  # Return a new service instance with the injected repository
