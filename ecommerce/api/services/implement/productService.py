@@ -40,7 +40,7 @@ class ProductService(ProductServiceInterface):
           
             added_product = self.product_repository.add(pro)
             # Return success with the added product DTO
-            return ConcreteResultT.success(ProductMapper.from_model(added_product))
+            return ConcreteResultT.success("added successfully")
         except Exception as e:
             return ConcreteResultT.fail(f"Failed to add product: {str(e)}", 500)
 

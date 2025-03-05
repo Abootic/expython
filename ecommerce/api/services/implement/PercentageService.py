@@ -5,12 +5,17 @@ from api.services.interface.PercentageServiceInterface import PercentageServiceI
 from api.dto.percentage_dto import PercentageDTO
 from api.models.percentage import Percentage
 from api.wrpper.Result import ConcreteResultT, ResultT
+import json
+
 
 
 
 class PercentageService(PercentageServiceInterface):
     def __init__(self, percentage_repository :PercentageRepositoryInterface):  # Ensure the parameter name is userrepoaitory
         self.percentage_repository = percentage_repository
+
+
+    
 
     def get_by_id(self, id: int) -> ResultT:
         try:
@@ -27,11 +32,14 @@ class PercentageService(PercentageServiceInterface):
     def all(self) -> ResultT:
         try:
             percntage = self.percentage_repository.all()  # Get all customers
-
+            # print("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
+            # v=PercentageMapper.to_dto(percntage)
+            # json_str =json.dumps(v.__dict__)
+            # print(json_str)  #
 
             if percntage:
-                dto=PercentageMapper.to_dto(percntage)
-                return ConcreteResultT.success(dto,"percntage added retrive",200)
+                dto=PercentageMapper.to_dto_list(percntage)
+                return ConcreteResultT.success(dto)
             
             return  ConcreteResultT.fail("percntage not retrive is empty,",200)
 
@@ -103,6 +111,24 @@ class PercentageService(PercentageServiceInterface):
             return ConcreteResultT.fail("percntage not found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error occurred during deletion: {str(e)}", 500)
+        
+    def assign_percentage_value_to_suppliers(self,market_id: int)-> ResultT:
+        try:
+            # Use the repository to find and delete the Customer
+            model = self.percentage_repository.assign_percentage_value_to_suppliers(market_id)
+            if model==1:
+                
+                    return ConcreteResultT.fail("already assgin percentage value", 200)
+            elif  model==2:
+              return ConcreteResultT.success(" assgin  percentage value to supplier succesfully")
+            else :
+                  return ConcreteResultT.fail("something error ", 200)
+
+           
+        except Exception as e:
+            return ConcreteResultT.fail(f"Error occurred during deletion: {str(e)}", 500)
+        
+
         
 
     

@@ -9,6 +9,7 @@ class SupplierMapper:
         return Supplier(
             code=supplier_dto.code,
             market_id=supplier_dto.market_id,
+            join_date=supplier_dto.join_date
             # Add other fields if necessary
         )
 
@@ -19,7 +20,8 @@ class SupplierMapper:
             id=supplier.id,
             code=supplier.code,
             market_id=supplier.market_id,
-            user_dto=user_dto.to_dict() if user_dto else None  # Convert UserDTO to dict if provided
+            user_dto=user_dto.to_dict() if user_dto else None  ,
+            join_date=supplier.join_date
         )
 
     @staticmethod

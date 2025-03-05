@@ -83,6 +83,8 @@ MIDDLEWARE = [
 ]
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    
+    'axes.backends.AxesStandaloneBackend',
     # Any other authentication backends you're using
 ]
 

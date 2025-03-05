@@ -1,35 +1,25 @@
-from decimal import Decimal
-from typing import Optional
+from datetime import datetime
 
 class OrderDTO:
-    def __init__(
-        self,
-        id: int,
-        customer_id: Optional[int],  # Optional in case customer is null
-        product_id: Optional[int],    # Optional in case product is null
-        total_price: Decimal,
-        price: Decimal,
-        create_at: str,  # You can adjust this based on your date format preferences
-        quantity: int
-    ):
-        self.id = id
+    def __init__(self, id=None, customer_id=None, product_id=None, total_price=None, price=None, quantity=None, create_at=None):
+        self.id = id if id is not None else None  # id is auto-generated (null/None for now)
         self.customer_id = customer_id
         self.product_id = product_id
         self.total_price = total_price
         self.price = price
-        self.create_at = create_at
         self.quantity = quantity
+        self.create_at = create_at if create_at else datetime.now()  # Automatically set the current date/time
 
-    def to_dict(self) -> dict:
-        """Convert the DTO to a dictionary."""
+    # Example of adding a to_dict method to convert DTO to dict
+    def to_dict(self):
         return {
             "id": self.id,
             "customer_id": self.customer_id,
             "product_id": self.product_id,
-            "total_price": str(self.total_price),  # Ensure Decimal is stringified
+            "total_price": str(self.total_price),
             "price": str(self.price),
-            "create_at": self.create_at,
-            "quantity": self.quantity
+            "quantity": self.quantity,
+            "create_at": self.create_at.isoformat()
         }
 
     @staticmethod

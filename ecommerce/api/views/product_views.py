@@ -34,7 +34,7 @@ class ProductViewSet(viewsets.ViewSet):
         res = self.product_service.add(product_dto)
 
         # Ensure the response is a dictionary, so it's serializable
-        return Response(res.data.to_dict(), status=201)  # Assuming res.data is a ProductDTO
+        return Response(res.status.message, status=201)  # Assuming res.data is a ProductDTO
     except Exception as e:
         # Handle any exception that occurs during the process
         return Response({"error": str(e)}, status=500)

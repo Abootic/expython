@@ -23,4 +23,7 @@ class PercentageServiceInterface(ABC):
   @abstractmethod
   def delete(self, supplier_dto: PercentageDTO) -> bool:
     pass
+  @abstractmethod
+  def  assign_percentage_value_to_suppliers(market_id: int):
+    pass
 

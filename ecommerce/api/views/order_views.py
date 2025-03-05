@@ -1,67 +1,111 @@
-from decimal import Decimal
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework import status
 from api.dto.order_dto import OrderDTO
 from api.factories.service_factory import create_order_service
-from api.models.order import Order
-from rest_framework import status
+from api.wrpper.Result import ResultT
+from api.Mapper.OrderMapper import OrderMapper  # Assuming this is used for DTO transformation
+from rest_framework.decorators import action
 
 class OrderViewSet(viewsets.ViewSet):
 
-  def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-    self.order_service = create_order_service()
+    def __init__(self, *args, **kwargs):
+        # Initialize the order service
+        self.order_service = create_order_service()  # Initialize OrderService with the repository
+        super().__init__(*args, **kwargs)
 
-  def list(self, request):
-    res = self.order_service.all()
-    if res.status.succeeded:
-          return Response([obj.to_dict() for obj in res.data], status=res.status.code)
-    return Response({"error": res.status.message}, status=res.status.code)
+    def list(self, request):
+        """
+        Retrieve a list of all orders.
+        """
+        res = self.order_service.all()
+        if res.status.succeeded:
+            # Assuming you have a mapper or DTO for proper transformation
+            return Response([obj.__dict__ for obj in res.data], status=status.HTTP_200_OK)
+        return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
-  
+    def retrieve(self, request, pk=None):
+        """
+        Retrieve a specific order by ID.
+        """
+        res = self.order_service.get_by_id(pk)
+        if res.status.succeeded:
+            order_dto = OrderDTO.from_model(res.data)  # Map to DTO
+            return Response(order_dto.to_dict(), status=status.HTTP_200_OK)
+        return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
-  def retrieve(self, request, pk=None):
-    order = self.order_service.get_by_id(pk)
-    if order:
-      order_dto = OrderDTO.from_model(order)
-      return Response(order_dto.to_dict())
-    return Response({"error": "Order not found"}, status=404)
+    def create(self, request):
+        """
+        Create a new order.
+        """
+        order_data = request.data
+        try:
+            # Map request data to DTO
+            order_dto = OrderDTO(**order_data)
+            res = self.order_service.add(order_dto)
+            if res.status.succeeded:
+                
+                return Response(res.status.message, status=status.HTTP_201_CREATED)
+            return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-  def create(self, request):
-    try:
-        # Create the OrderDTO from the request data
-        order_dto = OrderDTO(
-      id=request.data.get('id'),
-      customer_id=request.data.get('customer_id'),  # ✅ Correct field name
-      product_id=request.data.get('product_id'),
-      total_price=Decimal(request.data.get('total_price')),
-      price=Decimal(request.data.get('price')),
-      create_at=request.data.get('create_at'),
-      quantity=request.data.get('quantity')
-  )
+    def update(self, request, pk=None):
+        """
+        Update an existing order.
+        """
+        order_data = request.data
+        try:
+            # Map request data to DTO and add the order ID
+            order_dto = OrderDTO(**order_data)
+            order_dto.id = pk
+            res = self.order_service.update(order_dto)
+            if res.status.succeeded:
+                order_dto = OrderDTO.from_model(res.data)  # Map updated order to DTO
+                return Response(order_dto.to_dict(), status=status.HTTP_200_OK)
+            return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, pk=None):
+        """
+        Delete an existing order.
+        """
+        try:
+            res = self.order_service.get_by_id(pk)
+            if res.status.succeeded:
+                order = res.data
+                delete_result = self.order_service.delete(order)
+                if delete_result.status.succeeded:
+                    return Response({"message": "Order deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+                return Response({"error": delete_result.status.message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=True, methods=['post'], url_path='calculate-profit', url_name='calculate-profit')
+    def calculate_profit(self, request, pk=None):
+        """
+        Calculate and update the supplier profit based on an order.
+        """
+        res = self.order_service.calculate_supplier_profit(pk)
+        if res.status.succeeded:
+            return Response({"message": "Profit calculated and updated successfully","data":res.data}, status=status.HTTP_200_OK)
+        return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Call the add method of the service to add the order
-        result = self.order_service.add(order_dto)
+    def process_order(self, request, pk=None):
+        """
+        Process an order, including calculating profit and updating the supplier.
+        """
+        res = self.order_service.process_order(pk)
+        if res.status.succeeded:
+            return Response({"message": "Order processed successfully"}, status=status.HTTP_200_OK)
+        return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
-        if result.status.succeeded:
-            # Return the success response with the order DTO
-            return Response(result.data.to_dict(), status=201)
-
-        return Response({"error": result.status.message}, status=result.status.code)
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
-
-
-  def update(self, request, pk=None):
-    order_dto = OrderDTO(id=pk, customer_id=request.data.get('customer_id'), product_id=request.data.get('product_id'), total_price=request.data.get('total_price'), quantity=request.data.get('quantity'))
-    order = Order(id=pk, customer_id=request.data.get('customer_id'), product_id=request.data.get('product_id'), total_price=request.data.get('total_price'), quantity=request.data.get('quantity'))
-    updated_order = self.order_service.update(order)
-    return Response(updated_order.to_dict())
-
-  def destroy(self, request, pk=None):
-    order = Order(id=pk)
-    success = self.order_service.delete(order)
-    if success:
-        return Response({"message": "Order deleted"}, status=204)
-    return Response({"error": "Order not found"}, status=404)
+    def get_supplier_profit(self, request, supplier_id=None, month=None):
+        """
+        Retrieve the supplier's profit for a specific month.
+        """
+        res = self.order_service.get_supplier_profit_for_month(supplier_id, month)
+        if res.status.succeeded:
+            return Response({"profit": res.data}, status=status.HTTP_200_OK)
+        return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)

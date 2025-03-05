@@ -1,35 +1,34 @@
 from api.models.order import Order
-from api.dto.order_dto import OrderDTO
-from decimal import Decimal
+from api.dto.order_dto import OrderDTO  # Assuming OrderDTO is located in the 'dtos' folder
 
 class OrderMapper:
-    
+
     @staticmethod
-    def to_model(order_dto: OrderDTO) -> Order:
+    def convert_to_dto(order: Order) -> OrderDTO:
         """
-        Convert OrderDTO to Order model instance.
+        Convert the Order model to OrderDTO.
+        """
+        return OrderDTO(
+            id=order.id,
+            customer_id=order.customer.id,
+            product_id=order.product.id,
+            total_price=order.total_price,
+            price=order.price,
+            quantity=order.quantity,
+            create_at=order.create_at.strftime('%Y-%m-%d')  # Format the date as needed
+        )
+
+    @staticmethod
+    def convert_to_model(order_dto: OrderDTO) -> Order:
+        """
+        Convert the OrderDTO to an Order model.
         """
         return Order(
             id=order_dto.id,
             customer_id=order_dto.customer_id,
             product_id=order_dto.product_id,
-            total_price=Decimal(order_dto.total_price),  # Ensure price is a Decimal
-            price=Decimal(order_dto.price),  # Ensure price is a Decimal
-            create_at=order_dto.create_at,  # Assuming the date is passed as string in 'YYYY-MM-DD'
-            quantity=order_dto.quantity
-        )
-    
-    @staticmethod
-    def from_model(order: Order) -> OrderDTO:
-        """
-        Convert Order model instance to OrderDTO.
-        """
-        return OrderDTO(
-            id=order.id,
-            customer_id=order.customer.id if order.customer else None,
-            product_id=order.product.id if order.product else None,
-            total_price=order.total_price,
-            price=order.price,
-            create_at=order.create_at.strftime('%Y-%m-%d'),  # Adjust the date format as needed
-            quantity=order.quantity
+            total_price=order_dto.total_price,
+            price=order_dto.price,
+            quantity=order_dto.quantity,
+            create_at=order_dto.create_at  # You may need to adjust the date format here
         )

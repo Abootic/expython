@@ -30,9 +30,9 @@ class ConcreteResultT(ResultT):
         super().__init__(status, data)
 
     @classmethod
-    def success(cls, data):
-        # Create a success status with code 200
-        status = MessageResult("Success", 200, True)
+    def success(cls, data, message="success"):
+        # Create a success status with a custom message and code 200
+        status = MessageResult(message, 200, True)
         return cls(status, data)
 
     @classmethod

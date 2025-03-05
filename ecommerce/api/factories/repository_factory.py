@@ -14,6 +14,10 @@ from api.repositories.interface.percentageRepositoryInterface import PercentageR
 from api.repositories.implement.percentageRepository import PercentageRepository
 
 
+from api.repositories.interface.SupplierProfitRepositoryInterface import SupplierProfitRepositoryInterface
+from api.repositories.implement.SupplierProfitRepository import SupplierProfitRepositoryImpl
+
+
 
 user_repository_instance = None
 
@@ -115,6 +119,25 @@ def create_Percentage_repository(singleton: bool = False) -> PercentageRepositor
         return Percentage_repository_instance
     else:
         return PercentageRepository()  # Create a new instance each time
+#####################################################################################################################
+
+
+
+
+#####################################################################################################################
+
+SupplierProfit_repository_instance = None
+
+def create_supplier_profit_repository(singleton: bool = False) -> SupplierProfitRepositoryInterface:
+    global SupplierProfit_repository_instance
+    
+    
+    if singleton:
+        if SupplierProfit_repository_instance is None:
+            SupplierProfit_repository_instance = SupplierProfitRepositoryImpl()  # Create the singleton instance
+        return SupplierProfit_repository_instance
+    else:
+        return SupplierProfitRepositoryImpl()  # Create a new instance each time
 #####################################################################################################################
 
 

@@ -29,3 +29,6 @@ class PercentageRepositoryInterface(ABC):
 	@abstractmethod
 	def get_by_supplier(self, supplier_id: int):
 		pass
+	@abstractmethod
+	def  assign_percentage_value_to_suppliers(market_id: int):
+		pass

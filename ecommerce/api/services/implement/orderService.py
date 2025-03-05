@@ -1,12 +1,13 @@
+from django.utils import timezone
+from api.Mapper.OrderMapper import OrderMapper
+from api.dto.order_dto import OrderDTO
+from api.models.supplierProfit import SupplierProfit
 from api.repositories.interface.orderRepositoryInterface import OrderRepositoryInterface
 from api.services.interface.orderServiceInterface import OrderServiceInterface
-from api.dto.order_dto import OrderDTO
-from api.models.order import Order
 from typing import List
 from api.wrpper.Result import ConcreteResultT, ResultT
-from api.Mapper.OrderMapper import OrderMapper  # Assuming you have this mapper
 
-class OrdersService(OrderServiceInterface):
+class OrderService(OrderServiceInterface):
 
     def __init__(self, order_repository: OrderRepositoryInterface):
         self.order_repository = order_repository
@@ -15,9 +16,10 @@ class OrdersService(OrderServiceInterface):
         try:
             order = self.order_repository.get_by_id(order_id)
             if order:
-                # Wrap the OrderDTO in a success result
-                return ConcreteResultT.success(OrderDTO.from_model(order))
-            return ConcreteResultT.fail("Order not found", 404)
+                dto = OrderMapper.convert_to_dto(order)
+                return ConcreteResultT.success(dto)
+            else:
+                return ConcreteResultT.fail("Order not found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving order: {str(e)}", 500)
 
@@ -25,53 +27,81 @@ class OrdersService(OrderServiceInterface):
         try:
             orders = self.order_repository.all()
             if orders:
-                # Wrap a list of OrderDTOs in a success result
-                order_dtos = [OrderDTO.from_model(order) for order in orders]
+                order_dtos = [OrderMapper.convert_to_dto(order) for order in orders]
                 return ConcreteResultT.success(order_dtos)
-            return ConcreteResultT.fail("No orders found", 404)
+            else:
+                return ConcreteResultT.fail("No orders found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving orders: {str(e)}", 500)
 
-    def add(self, order_dto: OrderDTO) -> ResultT:
+    def add(self, order: OrderDTO) -> ResultT:
         try:
-            # # Convert DTO to model
-            # order = Order(
-            #     id=order_dto.id,
-            #     customer_id=order_dto.customer.id,
-            #     product_id=order_dto.product.id,
-            #     total_price=order_dto.total_price,
-            #     quantity=order_dto.quantity
-            # )
-            order=OrderMapper.to_model(order_dto)
-            added_order = self.order_repository.add(order)
-            # Wrap the created order DTO in a success result
-            return ConcreteResultT.success(OrderDTO.from_model(added_order))
+            order_model = OrderMapper.convert_to_model(order)
+            added_order = self.order_repository.add(order_model)
+            return ConcreteResultT.success(OrderMapper.convert_to_dto(added_order))
         except Exception as e:
-            return ConcreteResultT.fail(f"Failed to add order: {str(e)}", 500)
+            return ConcreteResultT.fail(f"Error adding order: {str(e)}", 500)
 
-    def update(self, order_dto: OrderDTO) -> ResultT:
+    def update(self, order: OrderDTO) -> ResultT:
         try:
-            # Update the order model
-            order = Order(
-                id=order_dto.id,
-                customer_id=order_dto.customer.id,
-                product_id=order_dto.product.id,
-                total_price=order_dto.total_price,
-                quantity=order_dto.quantity
-            )
-            updated_order = self.order_repository.update(order)
-            # Wrap the updated order DTO in a success result
-            return ConcreteResultT.success(OrderDTO.from_model(updated_order))
+            order_model = OrderMapper.convert_to_model(order)
+            updated_order = self.order_repository.update(order_model)
+            return ConcreteResultT.success(OrderMapper.convert_to_dto(updated_order))
         except Exception as e:
-            return ConcreteResultT.fail(f"Failed to update order: {str(e)}", 500)
+            return ConcreteResultT.fail(f"Error updating order: {str(e)}", 500)
 
-    def delete(self, order_dto: OrderDTO) -> ResultT:
+    def delete(self, order: OrderDTO) -> ResultT:
         try:
-            order = Order.objects.get(id=order_dto.id)
-            if self.order_repository.delete(order):
-                return ConcreteResultT.success("Order successfully deleted", 200)
-            return ConcreteResultT.fail("Failed to delete order", 400)
-        except Order.DoesNotExist:
-            return ConcreteResultT.fail("Order not found", 404)
+            order_model = OrderMapper.convert_to_model(order)
+            self.order_repository.delete(order_model)
+            return ConcreteResultT.success("Order deleted successfully")
         except Exception as e:
-            return ConcreteResultT.fail(f"Error occurred during deletion: {str(e)}", 500)
+                return ConcreteResultT.fail(f"Error deleting order: {str(e)}", 500)
+    def update_order_and_profit(self, order_id: int, new_price: float, new_quantity: int) -> ResultT:
+            """
+            Update the order price and quantity, and recalculate the supplier profit based on new values.
+            """
+            try:
+                # Get the order using the repository
+                order = self.order_repository.get_by_id(order_id)
+                if not order:
+                    return ConcreteResultT.fail("Order not found", 404)
+
+                # Update the order with the new price and quantity
+                order.price = new_price
+                order.quantity = new_quantity
+                order.save()
+
+                # Calculate the new profit based on updated price and quantity
+                order_profit = new_price * new_quantity
+
+                # Get the supplier associated with the product in the order
+                supplier = self.order_repository.get_supplier_by_product(order.product)
+                if not supplier:
+                    return ConcreteResultT.fail("Supplier not found", 404)
+
+                # Update or create the supplier's profit record (recalculate the profit)
+                self.order_repository.update_or_create_supplier_profit(supplier, order_profit)
+
+                return ConcreteResultT.success("Order and profit updated successfully")
+            except Exception as e:
+                return ConcreteResultT.fail(f"Error updating order and profit: {str(e)}", 500)
+
+    def process_order(self, order_id: int) -> ResultT:
+            try:
+                result = self.calculate_supplier_profit(order_id)
+                if result.is_success():
+                    return ConcreteResultT.success("Order processed successfully")
+                return result
+            except Exception as e:
+                return ConcreteResultT.fail(f"Error processing order: {str(e)}", 500)
+
+    def get_supplier_profit_for_month(self, supplier_id: int, month: int) -> ResultT:
+        try:
+            profit = self.order_repository.get_supplier_profit_for_month(supplier_id, month)
+            if profit is not None:
+                return ConcreteResultT.success(profit)
+            else:
+                return ConcreteResultT.fail("No profit found for this supplier in the given month", 404)
+        except Exception as e:
+            return ConcreteResultT.fail(f"Error retrieving supplier profit: {str(e)}", 500)
