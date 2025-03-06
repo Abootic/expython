@@ -36,3 +36,5 @@ class CustomerRepository(CustomerRepositoryInterface):
   def exists_by_code(self, code: str) -> bool:
         # Check if a Customer with the given code exists
         return self.model.objects.filter(code=code).exists()
+  def get_by_code(self, code: str) -> Customer | None:
+    return Customer.objects.filter(code=code).first()

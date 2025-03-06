@@ -23,4 +23,7 @@ class CustomerServiceInterface(ABC):
   @abstractmethod
   def delete(self, supplier_dto: CustomerDTO) -> bool:
     pass
+  @abstractmethod
+  def get_supplier_by_code(self, code: str) -> CustomerDTO | None:
+   pass
 

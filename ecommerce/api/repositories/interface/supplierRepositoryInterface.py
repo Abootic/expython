@@ -29,3 +29,6 @@ class SupplierRepositoryInterface(ABC):
 	@abstractmethod
 	def   count_by_market_id(self, market_id: int) -> int:
 		pass
+	@abstractmethod
+	def  get_by_code(self, code: str) -> Supplier | None:
+		pass

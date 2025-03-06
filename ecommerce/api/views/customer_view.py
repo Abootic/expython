@@ -2,6 +2,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from api.dto.customer_dto import CustomerDTO
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+
 
 from api.dto.user_dto import UserDTO
 from api.factories.service_factory import create_customer_service  # Assuming service factory is used
@@ -23,7 +25,8 @@ class CustomerViewSet(viewsets.ViewSet):
         'list': [IsAuthenticated, RoleRequiredPermission],
         'retrieve': [IsAuthenticated, RoleRequiredPermission],
         'update': [IsAuthenticated, RoleRequiredPermission],
-        'destroy': [IsAuthenticated, RoleRequiredPermission]
+        'destroy': [IsAuthenticated, RoleRequiredPermission],
+        'get_customer_by_code': [IsAuthenticated, RoleRequiredPermission]
      })
     
     
@@ -106,3 +109,25 @@ class CustomerViewSet(viewsets.ViewSet):
         if res.status.succeeded:
             return Response({"message": "Supplier deleted"}, status=res.status.code)
         return Response({"error": res.status.message}, status=res.status.code)
+    
+    @action(detail=False, methods=['get'], url_path=r'get_customer_by_code/(?P<code>[\w-]+)')
+    def get_customer_by_code(self, request, code):
+        """
+        Custom action to retrieve supplier by code.
+        """
+        try:
+            # Call the service method to get the supplier by code
+            res = self._service.get_supplier_by_code(code)
+            
+            # Check if the service call was successful
+            if res.status.succeeded:
+                # Assuming `res.data` contains the supplier information
+                return Response({"customer_code": res.data.to_dict()}, status=res.status.code)
+            
+            # If the supplier wasn't found or some issue occurred
+            return Response({"error": res.status.message}, status=res.status.code)
+        
+        except Exception as e:
+            # If any error occurs, return a 500 error
+            return Response({"error": f"An error occurred: {str(e)}"}, status=500)
+

@@ -15,7 +15,7 @@ import json
 
 
 class CustomerService(CustomerServiceInterface):
-    def __init__(self, customer_repository, user_repository):  # Ensure the parameter name is userrepoaitory
+    def __init__(self, customer_repository:CustomerRepositoryInterface, user_repository:UserRepositoryInterface):  # Ensure the parameter name is userrepoaitory
         self.customer_repository = customer_repository
         self.user_repository = user_repository
 
@@ -30,20 +30,7 @@ class CustomerService(CustomerServiceInterface):
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving Customer: {str(e)}", 500)
 
-    # def all(self) -> ResultT:
-    #     try:
-    #         Customers = self.customer_repository.all()
-    #         if Customers:
-    #             Customer_dtos = CustomerMapper.to_dto_list(Customers)
-    #             user=self.user_repository.all()
-    #             print("=======================================================================")
-    #             print(json.dumps([dto.to_dict() for dto in Customer_dtos], indent=4))
-
-    #             return ConcreteResultT.success(Customer_dtos)
-    #         else:
-    #             return ConcreteResultT.fail("No Customers found", 404)
-    #     except Exception as e:
-    #         return ConcreteResultT.fail(f"Error retrieving Customers: {str(e)}", 500)
+ 
 
     def all(self) -> ResultT:
         try:
@@ -158,6 +145,16 @@ class CustomerService(CustomerServiceInterface):
             return ConcreteResultT.fail("Customer not found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error occurred during deletion: {str(e)}", 500)
+    def get_supplier_by_code(self, code: str) -> CustomerDTO | None:
+                try:
+                    customer = self.customer_repository.get_by_code(code)
+                    if customer:
+                        customer_dto = CustomerMapper.to_dto(customer)
+                        return ConcreteResultT.success(customer_dto)
+                    else:
+                        return ConcreteResultT.fail("customer not found", 404)
+                except Exception as e:
+                    return ConcreteResultT.fail(f"Error retrieving supplier: {str(e)}", 500)
 
 
 def _generate_Customer_code() -> str:

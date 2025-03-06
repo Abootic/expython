@@ -26,3 +26,9 @@ class CustomerRepositoryInterface(ABC):
 	@abstractmethod
 	def exists_by_code(self, code: str) -> bool:
 		pass
+	@abstractmethod
+	def  get_by_code(self, code: str) -> Customer | None:
+		pass
+	@abstractmethod
+	def  get_by_code(self, code: str) -> Customer | None:
+		pass

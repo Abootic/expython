@@ -39,3 +39,6 @@ class SupplierRepository(SupplierRepositoryInterface):
   def count_by_market_id(self, market_id: int) -> int:
         # This method returns the number of suppliers in the specified market
         return Supplier.objects.filter(market_id=market_id).count()
+  def get_by_code(self, code: str) -> Supplier | None:
+    return Supplier.objects.filter(code=code).first()
+

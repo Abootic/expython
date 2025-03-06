@@ -1,6 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import List
+
+from api.dto.Supplier_dto import SupplierDTO
 
 class SupplierProfitServiceInterface(ABC):
     @abstractmethod
-    def calculate_supplier_profit(self, market_id, month):
+    def update_or_create_profit(self, market_id, month):
+        pass
+    @abstractmethod
+    def all(self) -> List[SupplierDTO]:
         pass

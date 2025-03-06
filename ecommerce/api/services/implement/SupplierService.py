@@ -225,7 +225,17 @@ class SupplierService(SupplierServiceInterface):
 
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving suppliers: {str(e)}", 500)
-
+        
+    def get_supplier_by_code(self, code: str) -> SupplierDTO | None:
+        try:
+            supplier = self.supplier_repository.get_by_code(code)
+            if supplier:
+                supplier_dto = SupplierMapper.to_dto(supplier)
+                return ConcreteResultT.success(supplier_dto)
+            else:
+                return ConcreteResultT.fail("Supplier not found", 404)
+        except Exception as e:
+            return ConcreteResultT.fail(f"Error retrieving supplier: {str(e)}", 500)
 
 
 

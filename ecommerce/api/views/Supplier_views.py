@@ -25,7 +25,7 @@ class SupplierViewSet(viewsets.ViewSet):
         # Retrieve all suppliers using the service
         res = self._service.all()
         if res.status.succeeded:
-            return Response([supplier.to_dict() for supplier in res.data], status=res.status.code)
+            return Response([supplier.__dict__ for supplier in res.data], status=res.status.code)
         return Response({"error": res.status.message}, status=res.status.code)
 
     def retrieve(self, request, pk=None):
@@ -115,4 +115,24 @@ class SupplierViewSet(viewsets.ViewSet):
             return Response({"supplier_count": res.data}, status=res.status.code)
         
         return Response({"error": res.status.message}, status=res.status.code)
-
+   
+    @action(detail=False, methods=['get'], url_path=r'get_supplier_by_code/(?P<code>[\w-]+)')
+    def get_supplier_by_code(self, request, code):
+        """
+        Custom action to retrieve supplier by code.
+        """
+        try:
+            # Call the service method to get the supplier by code
+            res = self._service.get_supplier_by_code(code)
+            
+            # Check if the service call was successful
+            if res.status.succeeded:
+                # Assuming `res.data` contains the supplier information
+                return Response({"supplier_code": res.data.to_dict()}, status=res.status.code)
+            
+            # If the supplier wasn't found or some issue occurred
+            return Response({"error": res.status.message}, status=res.status.code)
+        
+        except Exception as e:
+            # If any error occurs, return a 500 error
+            return Response({"error": f"An error occurred: {str(e)}"}, status=500)

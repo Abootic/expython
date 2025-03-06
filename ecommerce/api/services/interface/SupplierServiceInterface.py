@@ -26,4 +26,7 @@ class SupplierServiceInterface(ABC):
   @abstractmethod
   def count_by_market_id(self, market_id: int) -> int:
     pass
+  @abstractmethod
+  def get_supplier_by_code(self, code: str) -> SupplierDTO | None:
+   pass
 
