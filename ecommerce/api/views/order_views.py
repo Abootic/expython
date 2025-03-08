@@ -2,16 +2,19 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from api.dto.order_dto import OrderDTO
-from api.factories.service_factory import create_order_service
-from api.wrpper.Result import ResultT
+from api.services.interfaces.IorderService import IOrderService
 from api.Mapper.OrderMapper import OrderMapper  # Assuming this is used for DTO transformation
 from rest_framework.decorators import action
+from api.factories.service_factory import ServiceFactory  # Import ServiceFactory
 
 class OrderViewSet(viewsets.ViewSet):
 
     def __init__(self, *args, **kwargs):
-        # Initialize the order service
-        self.order_service = create_order_service()  # Initialize OrderService with the repository
+        """
+        Initialize the OrderViewSet with the OrderService created by ServiceFactory.
+        """
+        service_factory = ServiceFactory()  # Create an instance of ServiceFactory
+        self.order_service = service_factory.create_order_service(singleton=True)  # Use the factory to get the service
         super().__init__(*args, **kwargs)
 
     def list(self, request):
@@ -20,7 +23,6 @@ class OrderViewSet(viewsets.ViewSet):
         """
         res = self.order_service.all()
         if res.status.succeeded:
-            # Assuming you have a mapper or DTO for proper transformation
             return Response([obj.__dict__ for obj in res.data], status=status.HTTP_200_OK)
         return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -40,11 +42,9 @@ class OrderViewSet(viewsets.ViewSet):
         """
         order_data = request.data
         try:
-            # Map request data to DTO
             order_dto = OrderDTO(**order_data)
             res = self.order_service.add(order_dto)
             if res.status.succeeded:
-                
                 return Response(res.status.message, status=status.HTTP_201_CREATED)
             return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -56,12 +56,11 @@ class OrderViewSet(viewsets.ViewSet):
         """
         order_data = request.data
         try:
-            # Map request data to DTO and add the order ID
             order_dto = OrderDTO(**order_data)
             order_dto.id = pk
             res = self.order_service.update(order_dto)
             if res.status.succeeded:
-                order_dto = OrderDTO.from_model(res.data)  # Map updated order to DTO
+                order_dto = OrderDTO.from_model(res.data)
                 return Response(order_dto.to_dict(), status=status.HTTP_200_OK)
             return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -82,6 +81,7 @@ class OrderViewSet(viewsets.ViewSet):
             return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['post'], url_path='calculate-profit', url_name='calculate-profit')
     def calculate_profit(self, request, pk=None):
         """
@@ -89,7 +89,7 @@ class OrderViewSet(viewsets.ViewSet):
         """
         res = self.order_service.calculate_supplier_profit(pk)
         if res.status.succeeded:
-            return Response({"message": "Profit calculated and updated successfully","data":res.data}, status=status.HTTP_200_OK)
+            return Response({"message": "Profit calculated and updated successfully", "data": res.data}, status=status.HTTP_200_OK)
         return Response({"error": res.status.message}, status=status.HTTP_400_BAD_REQUEST)
 
     def process_order(self, request, pk=None):

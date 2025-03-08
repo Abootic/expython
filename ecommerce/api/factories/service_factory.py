@@ -1,216 +1,112 @@
-from api.services.implement.userService import UserService
-from api.services.implement.marketService import MarketService
-from api.services.implement.productService import ProductService
-from api.services.interface.userServiceInterface import UserServiceInterface
-from api.services.interface.marketServiceInterface import MarketServiceInterface
+from api.services.interfaces.IuserService import IUserService
+from api.services.implementations.userService import UserService
+from api.services.interfaces.ImarketService import IMarketService
+from api.services.implementations.marketService import MarketService
+from api.services.interfaces.ISupplierService import ISupplierService
+from api.services.implementations.SupplierService import SupplierService
+from api.services.interfaces.IcustomerService import ICustomerService
+from api.services.implementations.CustomerService import CustomerService
+from api.services.interfaces.IproductService import IProductService
+from api.services.implementations.productService import ProductService
+from api.services.interfaces.IorderService import IOrderService
+from api.services.implementations.orderService import OrderService
+from api.services.interfaces.IPercentageService import IPercentageService
+from api.services.implementations.PercentageService import PercentageService
+from api.services.interfaces.ISupplierProfitService import ISupplierProfitService
+from api.services.implementations.SupplierProfitService import SupplierProfitService
 
-from api.services.interface.SupplierServiceInterface import SupplierServiceInterface
-from api.services.implement.SupplierService import SupplierService
-
-from api.services.interface.customerServiceInterface import CustomerServiceInterface
-from api.services.implement.CustomerService import CustomerService
-
-from api.services.interface.productServiceInterface import ProductServiceInterface
-from api.services.implement.productService import ProductService
-
-from api.services.interface.orderServiceInterface import OrderServiceInterface
-from api.services.implement.orderService import OrderService
-
-from api.services.interface.PercentageServiceInterface import PercentageServiceInterface
-from api.services.implement.PercentageService import PercentageService
-from api.services.interface.SupplierProfitServiceInterface import SupplierProfitServiceInterface
-from api.services.implement.SupplierProfitService import SupplierProfitServiceImpl
-
-from api.factories.repository_factory import create_market_repository
-from api.factories.repository_factory import create_product_repository
-from api.factories.repository_factory import create_supplier_repository
-from api.factories.repository_factory import create_User_repository
-from api.factories.repository_factory import create_customer_repository
-from api.factories.repository_factory import create_product_repository
-from api.factories.repository_factory import create_order_repository
-from api.factories.repository_factory import create_Percentage_repository
-from api.factories.repository_factory import create_supplier_profit_repository
+from api.factories.repository_factory import get_repository_factory
 
 
-###################################################################
-market_service_instance = None
+class ServiceFactory:
+    def __init__(self):
+        # Dictionary to store singleton instances
+        self._singleton_instances = {}
 
+    def get_service(self, service_class, *args, singleton: bool = False):
+        """
+        Generic method to get a service instance.
+        If `singleton` is True, return a singleton instance.
+        """
+        if singleton:
+            # Check if a singleton instance already exists
+            if service_class not in self._singleton_instances:
+                # Create a new instance and store it
+                self._singleton_instances[service_class] = service_class(*args)
+            return self._singleton_instances[service_class]
+        else:
+            # Return a new instance each time
+            return service_class(*args)
 
-def create_market_service(singleton: bool = False) -> MarketServiceInterface:
+    # Convenience methods for each service
+    def create_user_service(self, singleton: bool = False) -> IUserService:
+        user_repository = get_repository_factory().create_user_repository(singleton=singleton)
+        return self.get_service(UserService, user_repository, singleton=singleton)
 
-    global market_service_instance
+    def create_market_service(self, singleton: bool = False) -> IMarketService:
+        market_repository = get_repository_factory().create_market_repository(singleton=singleton)
+        return self.get_service(MarketService, market_repository, singleton=singleton)
+    def create_supplier_service(self, singleton: bool = False) -> ISupplierService:
+    # Create the repositories using the factory
+        supplier_repository = get_repository_factory().create_supplier_repository(singleton=singleton)
+        user_repository = get_repository_factory().create_user_repository(singleton=singleton)
 
-    if singleton:
-        if market_service_instance is None:
-            market_repository = create_market_repository(
-                singleton=True
-            )  # Get the singleton repository instance
-            market_service_instance = MarketService(
-                market_repository
-            )  # Create singleton service
-        return market_service_instance
-    else:
-        market_repository = create_market_repository(
-            singleton=False
-        )  # Get a new repository instance
-        return MarketService(
-            market_repository
-        )  # Return a new service instance with the injected repository
-
-
-###################################################################################################
-
-
-
-#####################################################################################
-def create_supplier_service(singleton: bool = False) -> SupplierServiceInterface:
-    global supplier_service_instance
-
-    if singleton:
-        if supplier_service_instance is None:
-            # Get singleton repository instances
-            supplier_repository = create_supplier_repository(singleton=True)
-            user_repository = create_User_repository(singleton=True)  # Make sure to create the user repository
-            supplier_service_instance = SupplierService(
-                supplier_repository=supplier_repository,
-                userrepoaitory=user_repository  # Ensure the argument name is userrepoaitory
-            )
-        return supplier_service_instance
-    else:
-        # Create new repository instances if singleton is False
-        supplier_repository = create_supplier_repository(singleton=False)
-        user_repository = create_User_repository(singleton=False)  # Create a fresh user repository
-        return SupplierService(
-            supplier_repository=supplier_repository,
-            userrepoaitory=user_repository  # Ensure the argument name is userrepoaitory
-        )
-
-
-
-
-    #######################################################################################
-
-user_service_instance = None
-
-def create_user_service(singleton: bool = False) -> UserServiceInterface:
-
-    global user_service_instance
-
-    if singleton:
-        if supplier_service_instance is None:
-            user_repository = create_User_repository(
-                singleton=True
-            )  # Get the singleton repository instance
-            user_service_instance = UserService(
-                user_repository
-            )  # Create singleton service
-        return user_service_instance
-    else:
-        user_repository = create_User_repository(
-            singleton=False
-        )  # Get a new repository instance
-        return UserService(
-            user_repository
-        )  # Return a new service instance with the injected repository
-##################################################################################
-customer_service_instance = None
-
-def create_customer_service(singleton: bool = False) -> CustomerServiceInterface:
-    global customer_service_instance
-
-    if singleton:
-        if customer_service_instance is None:
-            # Get the singleton instances for both repositories
-            customer_repository = create_customer_repository(singleton=True)
-            user_repository = create_User_repository(singleton=True)  # Use create_User_repository here
-            
-            # Create the singleton CustomerService instance with both repositories
-            customer_service_instance = CustomerService(
-                customer_repository,
-                user_repository
-            )
-        return customer_service_instance
-    else:
-        # Get new instances for both repositories
-        customer_repository = create_customer_repository(singleton=False)
-        user_repository = create_User_repository(singleton=False)  # Use create_User_repository here
+        # If the service is a singleton, we should cache it in a singleton instance map
+        if singleton:
+            if SupplierService not in self._singleton_instances:
+                self._singleton_instances[SupplierService] = SupplierService(supplier_repository, user_repository)
+            return self._singleton_instances[SupplierService]
         
-        # Return a new CustomerService instance with both repositories
-        return CustomerService(
-            customer_repository,
-            user_repository
-        )
-##################################################################################
-product_service_instance = None
+        # Otherwise, create a new instance of SupplierService
+        return SupplierService(supplier_repository, user_repository)
 
-def create_product_service(singleton: bool = False) -> ProductServiceInterface:
 
-    global product_service_instance
+    # Return the service instance, passing both repositories to the SupplierService constructor
+        return self.get_service(SupplierService, supplier_repository, user_repository, singleton=singleton)
 
-    if singleton:
-        if product_service_instance is None:
-            product_repository = create_product_repository(
-                singleton=True
-            )  # Get the singleton repository instance
-            product_service_instance = ProductService(
-                product_repository
-            )  # Create singleton service
-        return product_service_instance
-    else:
-        product_repository = create_product_repository(
-            singleton=False
-        )  # Get a new repository instance
-        return ProductService(
-            product_repository
-        )  # Return a new service instance with the injected repository
-##################################################################################
-order_service_instance = None
 
-def create_order_service(singleton: bool = False) -> OrderServiceInterface:
+    def create_customer_service(self, singleton: bool = False) -> ICustomerService:
+        # Create the repositories using the factory
+        customer_repository = get_repository_factory().create_customer_repository(singleton=singleton)
+        user_repository = get_repository_factory().create_user_repository(singleton=singleton)
 
-    global order_service_instance
+        # If the service is a singleton, we should cache it in a singleton instance map
+        if singleton:
+            if CustomerService not in self._singleton_instances:
+                self._singleton_instances[CustomerService] = CustomerService(customer_repository, user_repository)
+            return self._singleton_instances[CustomerService]
+        
+        # Otherwise, create a new instance of CustomerService
+        return CustomerService(customer_repository, user_repository)
 
-    if singleton:
-        if order_service_instance is None:
-            order_repository = create_order_repository(
-                singleton=True
-            )  # Get the singleton repository instance
-            order_service_instance = OrderService(
-                order_repository
-            )  # Create singleton service
-        return order_service_instance
-    else:
-        order_repository = create_order_repository(
-            singleton=False
-        )  # Get a new repository instance
-        return OrderService(
-            order_repository
-        )  # Return a new service instance with the injected repository
-##################################################################################
-Percentage_service_instance = None
+    def create_product_service(self, singleton: bool = False) -> IProductService:
+        product_repository = get_repository_factory().create_product_repository(singleton=singleton)
+        return self.get_service(ProductService, product_repository, singleton=singleton)
 
-def create_Percentage_service(singleton: bool = False) -> PercentageServiceInterface:
-    global Percentage_service_instance
+    def create_order_service(self, singleton: bool = False) -> IOrderService:
+        order_repository = get_repository_factory().create_order_repository(singleton=singleton)
+        return self.get_service(OrderService, order_repository, singleton=singleton)
 
-    if singleton:
-        if Percentage_service_instance is None:
-            Percentage_repository = create_Percentage_repository(singleton=True)  # Get the singleton repository instance
-            Percentage_service_instance = PercentageService(Percentage_repository)  # Create singleton service
-        return Percentage_service_instance
-    else:
-        Percentage_repository = create_Percentage_repository(singleton=False)  # Get a new repository instance
-        return PercentageService(Percentage_repository)  # Return a new service instance with the injected repository
-##################################################################################
-supplier_profit_service_instance = None
+    def create_percentage_service(self, singleton: bool = False) -> IPercentageService:
+       
+        percentage_repository = get_repository_factory().create_percentage_repository(singleton=singleton)
 
-def create_supplier_profit_service(singleton: bool = False) -> SupplierProfitServiceInterface:
-    global supplier_profit_service_instance
+        # Return the service instance (singleton if requested)
+        return self.get_service(PercentageService, percentage_repository, singleton=singleton)
 
-    if singleton:
-        if supplier_profit_service_instance is None:
-            supplier_profit_repository = create_supplier_profit_repository(singleton=True)  # Get the singleton repository instance
-            supplier_profit_service_instance = SupplierProfitServiceImpl(supplier_profit_repository)  # Create singleton service
-        return supplier_profit_service_instance
-    else:
-        supplier_profit_repository = create_supplier_profit_repository(singleton=False)  # Get a new repository instance
-        return SupplierProfitServiceImpl(supplier_profit_repository)  # Return a new service instance with the injected repository
+
+    def create_supplier_profit_service(self, singleton: bool = False) -> ISupplierProfitService:
+        supplier_profit_repository = get_repository_factory().create_supplier_profit_repository(singleton=singleton)
+        return self.get_service(SupplierProfitService, supplier_profit_repository, singleton=singleton)
+
+
+# Singleton instance of the ServiceFactory
+def get_service_factory() -> ServiceFactory:
+    """
+    Factory function to get a singleton instance of ServiceFactory.
+    """
+    if not hasattr(get_service_factory, "_instance"):
+        get_service_factory._instance = ServiceFactory()
+    return get_service_factory._instance
+
+

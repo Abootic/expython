@@ -1,10 +1,10 @@
-from api.models.order import Order
-from api.dto.order_dto import OrderDTO  # Assuming OrderDTO is located in the 'dtos' folder
+from django.apps import apps
+from api.dto.order_dto import OrderDTO
 
 class OrderMapper:
 
     @staticmethod
-    def convert_to_dto(order: Order) -> OrderDTO:
+    def convert_to_dto(order) -> OrderDTO:
         """
         Convert the Order model to OrderDTO.
         """
@@ -19,10 +19,11 @@ class OrderMapper:
         )
 
     @staticmethod
-    def convert_to_model(order_dto: OrderDTO) -> Order:
+    def convert_to_model(order_dto: OrderDTO):
         """
         Convert the OrderDTO to an Order model.
         """
+        Order = apps.get_model('api', 'Order')
         return Order(
             id=order_dto.id,
             customer_id=order_dto.customer_id,

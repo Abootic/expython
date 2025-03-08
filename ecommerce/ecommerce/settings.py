@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',  # تأكد من أن api هو التطبيق المحدد هنا
      'axes',
+     'django_injector'
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

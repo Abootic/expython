@@ -1,9 +1,9 @@
-from api.models.user import User
+from django.apps import apps
 from api.dto.user_dto import UserDTO
 
 class UserMapper:
     @staticmethod
-    def to_dto(user: User) -> UserDTO:
+    def to_dto(user) -> UserDTO:
         return UserDTO(
             id=user.id,
             username=user.username,
@@ -13,7 +13,7 @@ class UserMapper:
         )
 
     @staticmethod
-    def to_model(user: User) -> dict:
+    def to_model(user) -> dict:
         return {
             "id": user.id,
             "username": user.username,

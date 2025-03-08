@@ -1,10 +1,9 @@
-# product_mapper.py
+from django.apps import apps
 from api.dto.product_dto import ProductDTO
-from api.models.product import Product
 
 class ProductMapper:
     @staticmethod
-    def from_model(product: Product) -> ProductDTO:
+    def from_model(product) -> ProductDTO:
         """
         Converts a Product model instance to a ProductDTO.
         """
@@ -23,11 +22,11 @@ class ProductMapper:
         return [ProductMapper.from_model(product) for product in products]
 
     @staticmethod
-    def to_model(product_dto: ProductDTO) -> Product:
+    def to_model(product_dto: ProductDTO):
         """
         Converts a ProductDTO back to a Product model for database operations.
         """
-        # Assuming supplier_id is provided in the DTO and you want to link it back to a supplier model
+        Product = apps.get_model('api', 'Product')
         return Product(
             id=product_dto.id,
             name=product_dto.name,

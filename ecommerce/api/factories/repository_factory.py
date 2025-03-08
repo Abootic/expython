@@ -1,145 +1,73 @@
-from api.repositories.implement.userRepository import UserRepository
-from api.repositories.implement.marketRepository import MarketRepository
-from api.repositories.interface.userRepositoryInterface import UserRepositoryInterface
-from api.repositories.interface.marketRepositoryInterface import MarketRepositoryInterface
-from api.repositories.interface.supplierRepositoryInterface import SupplierRepositoryInterface
-from api.repositories.implement.SupplierRepository import SupplierRepository
-from api.repositories.interface.customerRepositoryInterface import CustomerRepositoryInterface
-from api.repositories.implement.customerRepository import CustomerRepository
-from api.repositories.interface.productRepositoryInterface import ProductRepositoryInterface
-from api.repositories.implement.productRepository import ProductRepository
-from api.repositories.interface.orderRepositoryInterface import OrderRepositoryInterface
-from api.repositories.implement.orderRepository import OrderRepository
-from api.repositories.interface.percentageRepositoryInterface import PercentageRepositoryInterface
-from api.repositories.implement.percentageRepository import PercentageRepository
+from api.repositories.interfaces.IuserRepository import IUserRepository
+from api.repositories.implementations.userRepository import UserRepository
+from api.repositories.interfaces.ImarketRepository import IMarketRepository
+from api.repositories.implementations.marketRepository import MarketRepository
+from api.repositories.interfaces.IsupplierRepository import ISupplierRepository
+from api.repositories.implementations.SupplierRepository import SupplierRepository
+from api.repositories.interfaces.IcustomerRepository import ICustomerRepository
+from api.repositories.implementations.customerRepository import CustomerRepository
+from api.repositories.interfaces.IproductRepository import IProductRepository
+from api.repositories.implementations.productRepository import ProductRepository
+from api.repositories.interfaces.IorderRepository import IOrderRepository
+from api.repositories.implementations.orderRepository import OrderRepository
+from api.repositories.interfaces.IpercentageRepository import IPercentageRepository
+from api.repositories.implementations.percentageRepository import PercentageRepository
+from api.repositories.interfaces.ISupplierProfitRepository import ISupplierProfitRepository
+from api.repositories.implementations.SupplierProfitRepository import SupplierProfitRepository
 
 
-from api.repositories.interface.SupplierProfitRepositoryInterface import SupplierProfitRepositoryInterface
-from api.repositories.implement.SupplierProfitRepository import SupplierProfitRepositoryImpl
+class RepositoryFactory:
+    def __init__(self):
+        # Dictionary to store singleton instances
+        self._singleton_instances = {}
+
+    def get_repository(self, repository_class, singleton: bool = False):
+        """
+        Get a repository instance. If `singleton` is True, return a singleton instance.
+        """
+        if singleton:
+            # Check if a singleton instance already exists
+            if repository_class not in self._singleton_instances:
+                # Create a new instance and store it
+                self._singleton_instances[repository_class] = repository_class()
+            return self._singleton_instances[repository_class]
+        else:
+            # Return a new instance each time
+            return repository_class()
+
+    # Convenience methods for each repository
+    def create_user_repository(self, singleton: bool = False) -> IUserRepository:
+        return self.get_repository(UserRepository, singleton)
+
+    def create_market_repository(self, singleton: bool = False) -> IMarketRepository:
+        return self.get_repository(MarketRepository, singleton)
+
+    def create_supplier_repository(self, singleton: bool = False) -> ISupplierRepository:
+        return self.get_repository(SupplierRepository, singleton)
+
+    def create_customer_repository(self, singleton: bool = False) -> ICustomerRepository:
+        return self.get_repository(CustomerRepository, singleton)
+
+    def create_product_repository(self, singleton: bool = False) -> IProductRepository:
+        return self.get_repository(ProductRepository, singleton)
+
+    def create_order_repository(self, singleton: bool = False) -> IOrderRepository:
+        return self.get_repository(OrderRepository, singleton)
+
+    def create_percentage_repository(self, singleton: bool = False) -> IPercentageRepository:
+        return self.get_repository(PercentageRepository, singleton)
+
+    def create_supplier_profit_repository(self, singleton: bool = False) -> ISupplierProfitRepository:
+        return self.get_repository(SupplierProfitRepository, singleton)
 
 
-
-user_repository_instance = None
-
-def create_User_repository(singleton: bool = False) -> UserRepositoryInterface:
-    global user_repository_instance
-    
-    
-    if singleton:
-        if user_repository_instance is None:
-            user_repository_instance = UserRepository()  # Create the singleton instance
-        return user_repository_instance
-    else:
-        return UserRepository()  # Create a new instance each time
-#########################################################################
-market_repository_instance = None
-
-def create_market_repository(singleton: bool = False) -> MarketRepositoryInterface:
-   
-    global market_repository_instance
-    
-    
-    if singleton:
-        if market_repository_instance is None:
-            market_repository_instance = MarketRepository()  # Create the singleton instance
-        return market_repository_instance
-    else:
-        return MarketRepository()  # Create a new instance each time
-    
-####################################################################################
-
-
-    
-####################################################################################
-supplier_repository_instance = None
-
-def create_supplier_repository(singleton: bool = False) -> SupplierRepositoryInterface:
-    global supplier_repository_instance
-    
-    
-    if singleton:
-        if supplier_repository_instance is None:
-            supplier_repository_instance = SupplierRepository()  # Create the singleton instance
-        return supplier_repository_instance
-    else:
-        return SupplierRepository()  # Create a new instance each time
-#####################################################################################################################
-####################################################################################
-customer_repository_instance = None
-
-def create_customer_repository(singleton: bool = False) -> CustomerRepositoryInterface:
-    global customer_repository_instance
-    
-    
-    if singleton:
-        if customer_repository_instance is None:
-            customer_repository_instance = CustomerRepository()  # Create the singleton instance
-        return customer_repository_instance
-    else:
-        return CustomerRepository()  # Create a new instance each time
-#####################################################################################################################
-####################################################################################
-product_repository_instance = None
-
-def create_product_repository(singleton: bool = False) -> ProductRepositoryInterface:
-    global product_repository_instance
-    
-    
-    if singleton:
-        if product_repository_instance is None:
-            product_repository_instance = ProductRepository()  # Create the singleton instance
-        return product_repository_instance
-    else:
-        return ProductRepository()  # Create a new instance each time
-#####################################################################################################################
-####################################################################################
-order_repository_instance = None
-
-def create_order_repository(singleton: bool = False) -> OrderRepositoryInterface:
-    global order_repository_instance
-    
-    
-    if singleton:
-        if order_repository_instance is None:
-            order_repository_instance = OrderRepository()  # Create the singleton instance
-        return order_repository_instance
-    else:
-        return OrderRepository()  # Create a new instance each time
-#####################################################################################################################
-
-Percentage_repository_instance = None
-
-def create_Percentage_repository(singleton: bool = False) -> PercentageRepositoryInterface:
-    global Percentage_repository_instance
-    
-    
-    if singleton:
-        if Percentage_repository_instance is None:
-            Percentage_repository_instance = PercentageRepository()  # Create the singleton instance
-        return Percentage_repository_instance
-    else:
-        return PercentageRepository()  # Create a new instance each time
-#####################################################################################################################
-
-
-
-
-#####################################################################################################################
-
-SupplierProfit_repository_instance = None
-
-def create_supplier_profit_repository(singleton: bool = False) -> SupplierProfitRepositoryInterface:
-    global SupplierProfit_repository_instance
-    
-    
-    if singleton:
-        if SupplierProfit_repository_instance is None:
-            SupplierProfit_repository_instance = SupplierProfitRepositoryImpl()  # Create the singleton instance
-        return SupplierProfit_repository_instance
-    else:
-        return SupplierProfitRepositoryImpl()  # Create a new instance each time
-#####################################################################################################################
-
-
+# Singleton instance of the RepositoryFactory (avoid global variable)
+def get_repository_factory() -> RepositoryFactory:
+    """
+    Factory function to get a singleton instance of RepositoryFactory.
+    """
+    if not hasattr(get_repository_factory, "_instance"):
+        get_repository_factory._instance = RepositoryFactory()
+    return get_repository_factory._instance
 
 

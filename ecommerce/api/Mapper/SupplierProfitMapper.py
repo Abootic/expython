@@ -1,6 +1,6 @@
-from api.dto.supplierProfit_dto import SupplierProfitDTO  # Import DTO class
-from api.Mapper.SupplierMapper import SupplierMapper  # Import Supplier DTO
-from api.models.supplierProfit import SupplierProfit  # Import SupplierProfit model if needed
+from django.apps import apps
+from api.dto.supplierProfit_dto import SupplierProfitDTO
+from api.Mapper.SupplierMapper import SupplierMapper
 
 class SupplierProfitMapper:
     @staticmethod
@@ -8,8 +8,7 @@ class SupplierProfitMapper:
         """
         Convert a SupplierProfit model instance to a SupplierProfitDTO.
         """
-        # Directly map model fields to DTO fields
-        supplier_dto = SupplierMapper.from_model(supplier_profit.supplier)  # Assuming `SupplierDTO.from_model()` is defined
+        supplier_dto = SupplierMapper.to_dto(supplier_profit.supplier)  # Use SupplierMapper to convert supplier model to DTO
         return SupplierProfitDTO(
             supplier=supplier_dto,  # Convert the supplier model to a SupplierDTO
             month=supplier_profit.month,
@@ -28,8 +27,9 @@ class SupplierProfitMapper:
         """
         Convert a SupplierProfitDTO to a SupplierProfit model instance.
         """
+        SupplierProfit = apps.get_model('api', 'SupplierProfit')
         return SupplierProfit(
-            supplier=supplier_profit_dto.supplier.to_model(),  # Assuming `to_model` is defined in SupplierDTO
+            supplier=supplier_profit_dto.supplier.to_model(),  # Convert SupplierDTO to Supplier model
             month=supplier_profit_dto.month,
             profit=supplier_profit_dto.profit
         )

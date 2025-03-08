@@ -1,11 +1,12 @@
+from django.apps import apps
 from api.dto.Supplier_dto import SupplierDTO
-from api.models.supplier import Supplier
 
 class SupplierMapper:
 
     @staticmethod
-    def to_model(supplier_dto: SupplierDTO) -> Supplier:
+    def to_model(supplier_dto: SupplierDTO):
         """Convert SupplierDTO to Supplier model."""
+        Supplier = apps.get_model('api', 'Supplier')
         return Supplier(
             code=supplier_dto.code,
             market_id=supplier_dto.market_id,
@@ -14,13 +15,13 @@ class SupplierMapper:
         )
 
     @staticmethod
-    def to_dto(supplier: Supplier, user_dto=None) -> SupplierDTO:
+    def to_dto(supplier, user_dto=None) -> SupplierDTO:
         """Convert Supplier model to SupplierDTO."""
         return SupplierDTO(
             id=supplier.id,
             code=supplier.code,
             market_id=supplier.market_id,
-            user_dto=user_dto.to_dict() if user_dto else None  ,
+            user_dto=user_dto.to_dict() if user_dto else None,
             join_date=supplier.join_date
         )
 
