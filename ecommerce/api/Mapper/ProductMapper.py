@@ -11,7 +11,9 @@ class ProductMapper:
             id=product.id,
             name=product.name,
             price=product.price,
-            supplier_id=product.supplier.id if product.supplier else None  # Safely get supplier_id
+            supplier_id=product.supplier.id if product.supplier else None,  # Safely get supplier_id
+            image=product.image
+
         )
 
     @staticmethod
@@ -31,5 +33,7 @@ class ProductMapper:
             id=product_dto.id,
             name=product_dto.name,
             price=product_dto.price,
-            supplier_id=product_dto.supplier_id  # Assuming supplier is linked via supplier_id
+            supplier_id=product_dto.supplier_id,
+            image=product_dto.image
+                                                                       
         )

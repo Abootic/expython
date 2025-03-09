@@ -16,6 +16,11 @@ class Product(models.Model):
     verbose_name="Product Name",
     help_text="Enter the name of the product."
   )
+  image = models.CharField(
+    max_length=100,
+    verbose_name="Product Name",
+    help_text="Enter the name of the product."
+  )
   price = models.DecimalField(
     max_digits=10,
     decimal_places=2,

@@ -14,6 +14,8 @@ from api.services.interfaces.IPercentageService import IPercentageService
 from api.services.implementations.PercentageService import PercentageService
 from api.services.interfaces.ISupplierProfitService import ISupplierProfitService
 from api.services.implementations.SupplierProfitService import SupplierProfitService
+from api.services.interfaces.IUplaodFileService import IUplaodFileService
+from api.services.implementations.UplaodFileService import UploadFileService
 
 from api.factories.repository_factory import get_repository_factory
 
@@ -62,7 +64,6 @@ class ServiceFactory:
 
 
     # Return the service instance, passing both repositories to the SupplierService constructor
-        return self.get_service(SupplierService, supplier_repository, user_repository, singleton=singleton)
 
 
     def create_customer_service(self, singleton: bool = False) -> ICustomerService:
@@ -98,6 +99,21 @@ class ServiceFactory:
     def create_supplier_profit_service(self, singleton: bool = False) -> ISupplierProfitService:
         supplier_profit_repository = get_repository_factory().create_supplier_profit_repository(singleton=singleton)
         return self.get_service(SupplierProfitService, supplier_profit_repository, singleton=singleton)
+    
+    def  create_upload_file_service(self, singleton: bool = False) -> IUplaodFileService:
+        return self.get_service(UploadFileService, singleton=singleton)
+    
+
+    
+    # Instead of importing at the top:
+# from api.services.implementations.UplaodFileService import UplaodFileService
+
+# Import it inside the method where it's used
+  
+
+    
+
+   
 
 
 # Singleton instance of the ServiceFactory
