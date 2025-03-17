@@ -28,6 +28,7 @@ class UploadFileService(IUplaodFileService):
     def _validate_file_extension(self, file_name: str, allowed_extensions: List[str]) -> bool:
         """Validate the file extension against a list of allowed extensions."""
         ext = file_name.split('.')[-1].lower()
+      
         return ext in allowed_extensions
 
     def _validate_file_size(self, file_size: int, max_size_mb: int) -> bool:
@@ -35,7 +36,6 @@ class UploadFileService(IUplaodFileService):
         return file_size <= max_size_mb * 1024 * 1024
 
     def delete_image_file(self, file_name_with_path: str, folder_name: str) -> bool:
-        """Delete a file from the specified folder."""
         upload_folder = os.path.join(self.base_upload_dir, folder_name)
         path = os.path.join(upload_folder, file_name_with_path)
         

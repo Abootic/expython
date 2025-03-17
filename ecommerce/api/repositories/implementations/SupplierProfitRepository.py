@@ -5,13 +5,13 @@ from api.models.order import Order
 from api.models.percentage import Percentage
 from api.models.supplierProfit import SupplierProfit
 from api.repositories.interfaces.ISupplierProfitRepository import ISupplierProfitRepository
-from django.db.models import Sum # type: ignore
+from django.db.models import Sum, QuerySet  # type: ignore
 
 
 
 class SupplierProfitRepository(ISupplierProfitRepository):
          
-         def all(self) -> List[SupplierProfit]:
+         def all(self) -> QuerySet[SupplierProfit, SupplierProfit]:
              return SupplierProfit.objects.all()
 
          def get_total_profit_for_market(self, market_id, month):

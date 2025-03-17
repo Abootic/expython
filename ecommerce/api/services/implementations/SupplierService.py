@@ -8,7 +8,7 @@ from api.dto.Supplier_dto import SupplierDTO
 from api.models.supplier import Supplier
 from typing import List
 from api.Mapper.SupplierMapper import SupplierMapper
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 import random
 import string
 import json
@@ -168,3 +168,24 @@ class SupplierService(ISupplierService):
                 return ConcreteResultT.fail("Supplier not found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving supplier: {str(e)}", 500)
+   
+    def get_supplier_by_userId(self, userid: str) -> ResultT:
+        try:
+            # Fetch the supplier using the repository
+            supplier = self.supplier_repository.get_by_userId(userid)
+            if supplier:
+                # Fetch the related user from the supplier and convert to user_dto
+                user_dto = UserDTO.from_model(supplier.user) if supplier.user else None
+
+                # Convert supplier model to DTO using the mapper
+                supplier_dto = SupplierMapper.to_dto(supplier, user_dto)
+                
+                return ConcreteResultT.success(supplier_dto)
+
+            else:
+                return ConcreteResultT.fail("Supplier not found", 404)
+
+        except Exception as e:
+            return ConcreteResultT.fail(f"Error retrieving supplier: {str(e)}", 500)
+
+

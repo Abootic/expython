@@ -21,8 +21,7 @@ router.register(r'percentage', PercentageViewSet, basename='percentage')  # Fixe
 router.register(r'supplierprofit', SupplierProfitViewSet, basename='supplierprofit')  # Fixed basename
 
 # Register LoginViewSet for user access
-router.register(r'useraccess', LoginViewSet, basename='login')
-
+router.register(r'useraccess', LoginViewSet, basename='useraccess')
 urlpatterns = [
     path('', include(router.urls)),  # Include router URLs (don't add 'api/' here)
 ]

@@ -2,7 +2,7 @@ from api.Mapper.PercentageMapper import PercentageMapper
 from api.repositories.interfaces.IpercentageRepository import IPercentageRepository
 from api.services.interfaces.IPercentageService import IPercentageService
 from api.dto.percentage_dto import PercentageDTO
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 
 class PercentageService(IPercentageService):
     def __init__(self, percentage_repository: IPercentageRepository):

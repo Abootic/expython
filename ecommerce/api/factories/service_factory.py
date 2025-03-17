@@ -1,3 +1,4 @@
+
 from api.services.interfaces.IuserService import IUserService
 from api.services.implementations.userService import UserService
 from api.services.interfaces.ImarketService import IMarketService
@@ -102,6 +103,9 @@ class ServiceFactory:
     
     def  create_upload_file_service(self, singleton: bool = False) -> IUplaodFileService:
         return self.get_service(UploadFileService, singleton=singleton)
+    
+  
+
     
 
     

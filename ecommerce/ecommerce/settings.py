@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',  # تأكد من أن api هو التطبيق المحدد هنا
      'axes',
-     'django_injector'
+     'django_injector',
+      'corsheaders',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -75,12 +76,13 @@ AUTH_USER_MODEL = 'api.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Place it here
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-      'axes.middleware.AxesMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -92,6 +94,9 @@ AUTHENTICATION_BACKENDS = [
 AXES_FAILURE_LIMIT = 5  # Number of failed login attempts before lockout
 AXES_COOLOFF_TIME = timedelta(minutes=15) 
 ROOT_URLCONF = 'ecommerce.urls'
+CORS_ALLOW_ALL_ORIGINS = True
+ALLOWED_HOSTS = ['*']  # Allow all hosts (for development only) 
+
 
 TEMPLATES = [
     {

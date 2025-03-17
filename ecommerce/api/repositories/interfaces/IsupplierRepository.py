@@ -32,3 +32,6 @@ class ISupplierRepository(ABC):
 	@abstractmethod
 	def  get_by_code(self, code: str) -> Supplier | None:
 		pass
+	@abstractmethod
+	def  get_by_userId(self, userid: str) -> Supplier | None:
+		pass

@@ -29,4 +29,7 @@ class ISupplierService(ABC):
   @abstractmethod
   def get_supplier_by_code(self, code: str) -> SupplierDTO | None:
    pass
+  @abstractmethod
+  def get_supplier_by_userId(self, userid: str) -> SupplierDTO | None:
+   pass
 

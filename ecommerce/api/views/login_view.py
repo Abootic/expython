@@ -2,27 +2,30 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
-from rest_framework.permissions import AllowAny  # Import AllowAny for open access to login
+from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from django.contrib.auth import authenticate
-from api.dto.user_dto import UserDTO  # Assuming you are using DTOs for user
 
 class LoginViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]  # Allows access without authentication
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='login')
     def login(self, request):
         # Extract username and password from the request
         username = request.data.get('username')
         password = request.data.get('password')
-
-        # Authenticate the user
-        user = authenticate(username=username, password=password)
+        
+        # Authenticate the user (pass the request as the first argument)
+        user = authenticate(request=request, username=username, password=password)
 
         # If authentication fails
         if user is None:
             return Response(
-                {'detail': 'Invalid credentials'},
+                {
+                    'succeeded': False,
+                    'message': 'Invalid credentials',
+                    'data': None
+                },
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -32,14 +35,18 @@ class LoginViewSet(viewsets.ViewSet):
 
         # Prepare user data for the response
         user_data = {
-            'username': user.username,
-            'user_type': user.user_type,  # Ensure the user model has this field
-            # Add any other fields you want to return, such as email, first_name, etc.
+            'id': user.id,  # Add the user ID
+            'username': user.username if user.username else "",  # Ensure no null value
+            'userType': user.user_type if user.user_type else "",  # Ensure no null value
         }
 
         # Return the response with the access token, refresh token, and user info
         return Response({
-            'access_token': access_token,
-            'refresh_token': str(refresh),
-            'user': user_data
+            'succeeded': True,
+            'message': 'Login successful',
+            'data': {
+                'accessToken': access_token,
+                'refreshToken': str(refresh),
+                'user': user_data
+            }
         }, status=status.HTTP_200_OK)

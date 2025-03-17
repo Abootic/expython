@@ -3,7 +3,7 @@ from api.services.interfaces.IproductService import IProductService
 from api.dto.product_dto import ProductDTO
 from api.models.product import Product
 from typing import List
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 from api.Mapper.ProductMapper import ProductMapper
 
 

@@ -1,30 +1,42 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from api.dto.Supplier_dto import SupplierDTO
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from api.dto.Supplier_dto import SupplierDTO
 from api.dto.user_dto import UserDTO
 from api.services.interfaces.ISupplierService import ISupplierService
 from api.permissions.permissions import RoleRequiredPermission
-from api.factories.service_factory import get_service_factory  # Import the factory
+from api.factories.service_factory import get_service_factory
+from api.permissions.permission_required_for_action import permission_required_for_action
 
 
-class SupplierViewSet(viewsets.ViewSet):
-    required_roles = ['ADMIN', 'SUPPLIER']  # Define roles allowed for this view
+class SupplierViewSet(viewsets.GenericViewSet):
+    required_roles = ['ADMIN', 'SUPPLIER']
 
     def get_permissions(self):
         """
         Handle permissions per action.
         """
-        permission_classes = [IsAuthenticated, RoleRequiredPermission]
-        return [permission() for permission in permission_classes]
+        if self.action == 'create':
+            return []  # No permissions required for 'create' action
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Use ServiceFactory to get the service instance
-        service_factory = get_service_factory()  # Singleton instance of ServiceFactory
-        self._service = service_factory.create_supplier_service(singleton=True)  # Get the service
+        # Apply permissions globally, but only to specific actions like 'list', 'update', etc.
+        return [permission() for permission in self.permission_classes]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        service_factory = get_service_factory()
+        self._service = service_factory.create_supplier_service(singleton=True)
+
+    @permission_required_for_action({
+        'list': [IsAuthenticated, RoleRequiredPermission],
+        'retrieve': [IsAuthenticated, RoleRequiredPermission],
+        'update': [IsAuthenticated, RoleRequiredPermission],
+        'destroy': [IsAuthenticated, RoleRequiredPermission],
+        'supplierCountInmarket': [IsAuthenticated, RoleRequiredPermission],
+        'get_supplier_by_code': [IsAuthenticated, RoleRequiredPermission],
+        'get_supplier_by_UserId': [IsAuthenticated, RoleRequiredPermission],
+    })
     def list(self, request):
         """
         Retrieve all suppliers.
@@ -34,6 +46,9 @@ class SupplierViewSet(viewsets.ViewSet):
             return Response([supplier.__dict__ for supplier in res.data], status=res.status.code)
         return Response({"error": res.status.message}, status=res.status.code)
 
+    @permission_required_for_action({
+        'retrieve': [IsAuthenticated, RoleRequiredPermission],
+    })
     def retrieve(self, request, pk=None):
         """
         Retrieve a single supplier by ID.
@@ -41,38 +56,79 @@ class SupplierViewSet(viewsets.ViewSet):
         res = self._service.get_by_id(pk)
         if res.status.succeeded:
             return Response(res.data.to_dict(), status=res.status.code)
-        return Response({"error": res.status.message}, status=res.status.code)
-
+            return Response({"error": res.status.message}, status=res.status.code)
     def create(self, request):
-        """
-        Create a new supplier.
-        """
+        print(f"Received Data: {request.data}")
         try:
-            # Extract user and supplier data from the request
+            # Check if 'code' is provided
+            if 'code' not in request.data:
+                print("Error: 'code' is missing")
+                return Response({"error": "'code' is required"}, status=400)
+            
+            # Check if 'market_id' is provided
+            if 'market_id' not in request.data:
+                print("Error: 'market_id' is missing")
+                return Response({"error": "'market_id' is required"}, status=400)
+
+            # Extract 'user_dto' from request data
             user_dto_data = request.data.get('user_dto')
             if not user_dto_data:
-                return Response({"error": "User data is required"}, status=400)
+                print("Error: 'user_dto' is missing")
+                return Response({"error": "'user_dto' is required"}, status=400)
 
-            user_dto = UserDTO(**user_dto_data)  # Map user data to UserDTO
+            # Check if required fields are in 'user_dto'
+            if 'username' not in user_dto_data or 'email' not in user_dto_data or 'user_type' not in user_dto_data or 'password' not in user_dto_data:
+                print("Error: Missing fields in 'user_dto'")
+                return Response({"error": "Missing fields in 'user_dto'"}, status=400)
 
-            # Create SupplierDTO from the request data
-            supplier_dto = SupplierDTO(
-                code=request.data.get('code'),
-                market_id=request.data.get('market_id'),
-                user_dto=user_dto
+            # Create UserDTO
+            user_dto = UserDTO(
+                username=user_dto_data['username'],
+                email=user_dto_data['email'],
+                user_type=user_dto_data['user_type'],
+                password=user_dto_data['password']
             )
 
-            # Call the service to add the supplier and user
+            # Create SupplierDTO
+            supplier_dto = SupplierDTO(
+                code=request.data['code'],
+                market_id=request.data['market_id'],
+                user_dto=user_dto  # Pass the UserDTO created earlier
+            )
+
+            # Call the service to add the supplier
             result = self._service.add(supplier_dto)
 
+            # Check if the operation was successful
             if result.status.succeeded:
-                return Response(result.data.to_dict(), status=201)
+                # On success, return the newly created supplier data
+                print("Supplier created successfully!")
+                return Response({
+                    'succeeded': result.status.succeeded,
+                    'message': result.status.message,
+                    'data': {'message': result.data}  # Ensure 'data' is always an object, not a string
+                }, 200)
 
-            return Response({"error": result.status.message}, status=400)
+                
+              
+            # Handle failure and return an error message
+            print(f"Supplier creation failed: {result.status.message}")
+            return Response({
+                    'succeeded': result.status.succeeded,
+                    'message': result.status.message,
+                    'data': {'message': result.data}  # Ensure 'data' is always an object, not a string
+                }, 200)
+          
 
         except Exception as e:
+            # Catch any unexpected errors and return a server error
+            print(f"Exception occurred: {str(e)}")
             return Response({"error": str(e)}, status=500)
 
+
+    @permission_required_for_action({
+        'update': [IsAuthenticated, RoleRequiredPermission],
+    })
     def update(self, request, pk=None):
         """
         Update an existing supplier.
@@ -81,20 +137,17 @@ class SupplierViewSet(viewsets.ViewSet):
             data = request.data
             user_dto_data = data.get('user_dto')
 
-            # Validate user_dto presence
             if user_dto_data:
                 user_dto = UserDTO(**user_dto_data)
             else:
                 return Response({"error": "User data is required"}, status=400)
 
-            # Create SupplierDTO with the provided data
             supplier_dto = SupplierDTO(
                 id=data.get('id', pk),
                 code=data.get('code'),
                 user_dto=user_dto
             )
 
-            # Call the service to update the supplier
             result = self._service.update(supplier_dto)
 
             if result.status.succeeded:
@@ -105,6 +158,9 @@ class SupplierViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": f"Error updating supplier: {str(e)}"}, status=500)
 
+    @permission_required_for_action({
+        'destroy': [IsAuthenticated, RoleRequiredPermission],
+    })
     def destroy(self, request, pk=None):
         """
         Delete an existing supplier.
@@ -120,20 +176,26 @@ class SupplierViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": f"Error deleting supplier: {str(e)}"}, status=500)
 
-    @action(detail=False, methods=['get'], url_path='supplierCountInmarket/(?P<marketid>\d+)')
+    @permission_required_for_action({
+        'supplierCountInmarket': [IsAuthenticated, RoleRequiredPermission],
+    })
+    @action(detail=False, methods=['get'], url_path=r'supplierCountInmarket/(?P<marketid>\d+)')
     def supplierCountInmarket(self, request, marketid):
         """
-        Custom action to get the supplier count by market ID.
+        Get the supplier count by market ID.
         """
         res = self._service.count_by_market_id(marketid)
         if res.status.succeeded:
             return Response({"supplier_count": res.data}, status=res.status.code)
         return Response({"error": res.status.message}, status=res.status.code)
 
+    @permission_required_for_action({
+        'get_supplier_by_code': [IsAuthenticated, RoleRequiredPermission],
+    })
     @action(detail=False, methods=['get'], url_path=r'get_supplier_by_code/(?P<code>[\w-]+)')
     def get_supplier_by_code(self, request, code):
         """
-        Custom action to retrieve supplier by code.
+        Retrieve a supplier by code.
         """
         try:
             res = self._service.get_supplier_by_code(code)
@@ -145,3 +207,44 @@ class SupplierViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({"error": f"An error occurred: {str(e)}"}, status=500)
+
+    @permission_required_for_action({
+        'get_supplier_by_UserId': [IsAuthenticated, RoleRequiredPermission],
+    })
+
+    @action(detail=False, methods=['get'], url_path=r'get_supplier_by_UserId/(?P<userid>[\d]+)')
+    def get_supplier_by_UserId(self, request, userid):
+        try:
+            res = self._service.get_supplier_by_userId(userid)
+
+            # Safely check if res.status.succeeded exists and is not None
+            succeeded = res.status.succeeded if res.status.succeeded is not None else False
+            print(f"succeeded: {succeeded}")
+
+            if succeeded:
+                # Directly return the supplier data in 'data' field
+                data = res.data.__dict__ if res.data else {}
+
+                return Response({
+                    'succeeded': succeeded,
+                    'message': res.status.message,
+                    'data': data
+                }, status=200)
+
+            # If the status is not succeeded, return the failure response
+            data = res.data.__dict__ if res.data else {}
+            return Response({
+                'succeeded': succeeded,
+                'message': res.status.message,
+                'data': data
+            }, status=res.status.code)
+
+        except Exception as e:
+            # Return the exception response explicitly
+            return Response({
+                'succeeded': False,
+                'message': f"An error occurred: {str(e)}",
+                'data': {}
+            }, status=500)
+
+

@@ -2,7 +2,7 @@ from api.Mapper.OrderMapper import OrderMapper
 from api.dto.order_dto import OrderDTO
 from api.repositories.interfaces.IorderRepository import IOrderRepository
 from api.services.interfaces.IorderService import IOrderService
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 from typing import List
 
 class OrderService(IOrderService):

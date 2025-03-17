@@ -41,4 +41,20 @@ class SupplierRepository(ISupplierRepository):
         return Supplier.objects.filter(market_id=market_id).count()
   def get_by_code(self, code: str) -> Supplier | None:
     return Supplier.objects.filter(code=code).first()
+  def get_by_userId(self, userid: str) -> Supplier | None:
+      try:
+          user_id = int(userid)
+      except ValueError:
+          return None  # Handle invalid user_id format
+
+      # Fetch supplier with the associated user, checking if the user is correctly populated
+      supplier = Supplier.objects.select_related('user').filter(user_id=user_id).first()
+      
+      if supplier:
+          print(f"Supplier user: {supplier.user}")  # Debug print
+      else:
+          print(f"No supplier found for user_id: {user_id}")  # Debug print
+      
+      return supplier
+
 

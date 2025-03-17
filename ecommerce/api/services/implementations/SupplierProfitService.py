@@ -3,7 +3,7 @@ from api.Mapper import SupplierProfitMapper
 from api.models import Product, Percentage
 from api.services.interfaces.ISupplierProfitService import ISupplierProfitService
 from api.repositories.interfaces.ISupplierProfitRepository import ISupplierProfitRepository
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 from api.dto.supplierProfit_dto import SupplierProfitDTO
 
 class SupplierProfitService(ISupplierProfitService):

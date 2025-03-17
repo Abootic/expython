@@ -2,7 +2,7 @@ from api.services.interfaces.ImarketService import IMarketService
 from api.repositories.interfaces.ImarketRepository import IMarketRepository
 from api.models.market import Market
 from api.dto.market_dto import MarketDTO
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 from typing import List, Optional
 
 class MarketService(IMarketService):

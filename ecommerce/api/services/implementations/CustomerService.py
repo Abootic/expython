@@ -8,7 +8,7 @@ from api.dto.customer_dto import CustomerDTO
 from api.models.customer import Customer
 from typing import List
 from api.Mapper.CustomerMapper import CustomerMapper
-from api.wrpper.Result import ConcreteResultT, ResultT
+from api.wrpper.result import ConcreteResultT, ResultT
 import random
 import string
 import json
