@@ -8,6 +8,7 @@ from api.services.interfaces.ISupplierService import ISupplierService
 from api.permissions.permissions import RoleRequiredPermission
 from api.factories.service_factory import get_service_factory
 from api.permissions.permission_required_for_action import permission_required_for_action
+from api.validation.validation_request import ValidationRequest
 
 
 class SupplierViewSet(viewsets.GenericViewSet):
@@ -30,12 +31,6 @@ class SupplierViewSet(viewsets.GenericViewSet):
 
     @permission_required_for_action({
         'list': [IsAuthenticated, RoleRequiredPermission],
-        'retrieve': [IsAuthenticated, RoleRequiredPermission],
-        'update': [IsAuthenticated, RoleRequiredPermission],
-        'destroy': [IsAuthenticated, RoleRequiredPermission],
-        'supplierCountInmarket': [IsAuthenticated, RoleRequiredPermission],
-        'get_supplier_by_code': [IsAuthenticated, RoleRequiredPermission],
-        'get_supplier_by_UserId': [IsAuthenticated, RoleRequiredPermission],
     })
     def list(self, request):
         """
@@ -56,75 +51,50 @@ class SupplierViewSet(viewsets.GenericViewSet):
         res = self._service.get_by_id(pk)
         if res.status.succeeded:
             return Response(res.data.to_dict(), status=res.status.code)
-            return Response({"error": res.status.message}, status=res.status.code)
+
     def create(self, request):
         print(f"Received Data: {request.data}")
         try:
-            # Check if 'code' is provided
-            if 'code' not in request.data:
-                print("Error: 'code' is missing")
-                return Response({"error": "'code' is required"}, status=400)
-            
-            # Check if 'market_id' is provided
-            if 'market_id' not in request.data:
-                print("Error: 'market_id' is missing")
-                return Response({"error": "'market_id' is required"}, status=400)
+            # Define required fields
+            required_fields = ['code', 'market_id', 'user']
+            user_dto_required_fields = ['username', 'email', 'user_type', 'password']
 
-            # Extract 'user_dto' from request data
-            user_dto_data = request.data.get('user_dto')
-            if not user_dto_data:
-                print("Error: 'user_dto' is missing")
-                return Response({"error": "'user_dto' is required"}, status=400)
+            # Validate main request data
+            validation_error = ValidationRequest.validate_request_data(request.data, required_fields)
+            if validation_error:
+                return validation_error
 
-            # Check if required fields are in 'user_dto'
-            if 'username' not in user_dto_data or 'email' not in user_dto_data or 'user_type' not in user_dto_data or 'password' not in user_dto_data:
-                print("Error: Missing fields in 'user_dto'")
-                return Response({"error": "Missing fields in 'user_dto'"}, status=400)
+            # Validate 'user' data
+            user_dto_data = request.data.get('user')
+            validation_error = ValidationRequest.validate_request_data(user_dto_data, user_dto_required_fields)
+            if validation_error:
+                return validation_error
 
             # Create UserDTO
-            user_dto = UserDTO(
-                username=user_dto_data['username'],
-                email=user_dto_data['email'],
-                user_type=user_dto_data['user_type'],
-                password=user_dto_data['password']
-            )
+            user_dto = UserDTO(**{field: user_dto_data[field] for field in user_dto_required_fields})
 
             # Create SupplierDTO
             supplier_dto = SupplierDTO(
                 code=request.data['code'],
                 market_id=request.data['market_id'],
-                user_dto=user_dto  # Pass the UserDTO created earlier
+                user_dto=user_dto
             )
 
             # Call the service to add the supplier
             result = self._service.add(supplier_dto)
 
-            # Check if the operation was successful
-            if result.status.succeeded:
-                # On success, return the newly created supplier data
-                print("Supplier created successfully!")
-                return Response({
-                    'succeeded': result.status.succeeded,
-                    'message': result.status.message,
-                    'data': {'message': result.data}  # Ensure 'data' is always an object, not a string
-                }, 200)
-
-                
-              
-            # Handle failure and return an error message
-            print(f"Supplier creation failed: {result.status.message}")
-            return Response({
-                    'succeeded': result.status.succeeded,
-                    'message': result.status.message,
-                    'data': {'message': result.data}  # Ensure 'data' is always an object, not a string
-                }, 200)
-          
+            # Return response based on operation result
+            response_data = {
+                'succeeded': result.status.succeeded,
+                'message': result.status.message,
+                'data': {'message': result.data}
+            }
+            print("Supplier created successfully!" if result.status.succeeded else f"Supplier creation failed: {result.status.message}")
+            return Response(response_data, status=200)
 
         except Exception as e:
-            # Catch any unexpected errors and return a server error
             print(f"Exception occurred: {str(e)}")
             return Response({"error": str(e)}, status=500)
-
 
     @permission_required_for_action({
         'update': [IsAuthenticated, RoleRequiredPermission],

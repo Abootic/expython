@@ -11,9 +11,9 @@ class ProductMapper:
             id=product.id,
             name=product.name,
             price=product.price,
-            supplier_id=product.supplier.id if product.supplier else None,  # Safely get supplier_id
-            image=product.image
-
+            supplier_id=product.supplier.id if product.supplier else None,
+            image=product.image,
+            user_id=None  # user_id is set to None because it does not exist in the Product model
         )
 
     @staticmethod
@@ -27,6 +27,7 @@ class ProductMapper:
     def to_model(product_dto: ProductDTO):
         """
         Converts a ProductDTO back to a Product model for database operations.
+        The user_id is not included because it's not part of the Product model.
         """
         Product = apps.get_model('api', 'Product')
         return Product(
@@ -35,5 +36,5 @@ class ProductMapper:
             price=product_dto.price,
             supplier_id=product_dto.supplier_id,
             image=product_dto.image
-                                                                       
+            # user_id is not part of the model
         )

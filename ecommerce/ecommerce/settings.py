@@ -175,8 +175,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Define the directory for uploaded files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')
+# Define the directory for uploaded files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')  # This should point to 'C:\Users\sarmi\OneDrive\Desktop\ecommerce\upload'
 
-# Define the URL that will be used to access uploaded files (change '/media/' to '/upload/')
-MEDIA_URL = '/upload/'
+# URL path to access the media files
+MEDIA_URL = '/upload/'  #
 

@@ -8,7 +8,7 @@ class User(AbstractUser):
     CUSTOMER = "CUSTOMER", "Customer"
     SUPPLIER = "SUPPLIER", "Supplier"
 
-  user_type = models.CharField(
+  user_type = models.CharField( 
     max_length=10,
     choices=UserRole.choices, # استخدام القائمة بشكل نظيف
     default=UserRole.CUSTOMER

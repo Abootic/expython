@@ -25,13 +25,14 @@ class ProductService(IProductService):
 
     def all(self) -> ResultT:
         try:
-            products = self.product_repository.all()
+            products = self.product_repository.all()  # Retrieve all products from the repository
             if products:
-                product_dtos = [ProductDTO.from_model(product) for product in products]
+                product_dtos = ProductMapper.from_model_list(products)  # Convert Product models to ProductDTOs
                 return ConcreteResultT.success(product_dtos)
             return ConcreteResultT.fail("No products found", 404)
         except Exception as e:
             return ConcreteResultT.fail(f"Error retrieving products: {str(e)}", 500)
+
 
     def add(self, product_dto: ProductDTO) -> ResultT:
         try:
